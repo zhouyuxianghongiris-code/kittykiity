@@ -159,16 +159,16 @@
         <!-- 视图切换标签 -->
         <div class="flex mb-4 sm:mb-6 bg-pink-soft rounded-2xl sm:rounded-3xl shadow-cute p-1 sm:p-2 overflow-x-auto scrollbar-hide">
             <button id="tab-chat" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-primary text-white font-medium cute-button text-center text-xs sm:text-sm whitespace-nowrap">
-                <i class="fa fa-comments mr-1 sm:mr-2"></i><span class="hidden sm:inline">对话记账</span>
+                <i class="fa fa-comments mr-1 sm:mr-2"></i><span>对话记账</span>
             </button>
             <button id="tab-daily" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
-                <i class="fa fa-calendar-day mr-1 sm:mr-2"></i><span class="hidden sm:inline">日账本</span>
+                <i class="fa fa-calendar mr-1 sm:mr-2"></i><span>日账本</span>
             </button>
             <button id="tab-weekly" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
-                <i class="fa fa-calendar-week mr-1 sm:mr-2"></i><span class="hidden sm:inline">周账本</span>
+                <i class="fa fa-calendar-check-o mr-1 sm:mr-2"></i><span>周账本</span>
             </button>
             <button id="tab-monthly" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
-                <i class="fa fa-calendar-alt mr-1 sm:mr-2"></i><span class="hidden sm:inline">月账本</span>
+                <i class="fa fa-calendar-plus-o mr-1 sm:mr-2"></i><span>月账本</span>
             </button>
         </div>
 
@@ -296,15 +296,15 @@
             </div>
 
             <!-- 周账本视图 -->
-            <div id="view-weekly" class="bg-white rounded-xl shadow-lg overflow-hidden hidden animate-fade-in">
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">周账本</h2>
-                    <div class="flex space-x-2">
-                        <button id="prev-week" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+            <div id="view-weekly" class="bg-white rounded-3xl shadow-cute overflow-hidden hidden animate-fade-in border-4 border-pink-light">
+                <div class="p-4 border-b-2 border-pink-light flex justify-between items-center bg-pink-soft">
+                    <h2 class="text-xl font-bold text-pink-dark">周账本</h2>
+                    <div class="flex space-x-3">
+                        <button id="prev-week" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
                             <i class="fa fa-chevron-left"></i>
                         </button>
-                        <span id="current-week" class="text-gray-700 font-medium">2025年第29周</span>
-                        <button id="next-week" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                        <span id="current-week" class="text-pink-dark font-bold text-lg px-4 py-2 bg-white rounded-2xl shadow-soft">2026年2月第3周 (2.16-2.22)</span>
+                        <button id="next-week" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
                             <i class="fa fa-chevron-right"></i>
                         </button>
                     </div>
@@ -346,15 +346,15 @@
             </div>
 
             <!-- 月账本视图 -->
-            <div id="view-monthly" class="bg-white rounded-xl shadow-lg overflow-hidden hidden animate-fade-in">
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">月账本</h2>
-                    <div class="flex space-x-2">
-                        <button id="prev-month" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+            <div id="view-monthly" class="bg-white rounded-3xl shadow-cute overflow-hidden hidden animate-fade-in border-4 border-pink-light">
+                <div class="p-4 border-b-2 border-pink-light flex justify-between items-center bg-pink-soft">
+                    <h2 class="text-xl font-bold text-pink-dark">月账本</h2>
+                    <div class="flex space-x-3">
+                        <button id="prev-month" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
                             <i class="fa fa-chevron-left"></i>
                         </button>
-                        <span id="current-month" class="text-gray-700 font-medium">2025年7月</span>
-                        <button id="next-month" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                        <span id="current-month" class="text-pink-dark font-bold text-lg px-4 py-2 bg-white rounded-2xl shadow-soft">2026年2月</span>
+                        <button id="next-month" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
                             <i class="fa fa-chevron-right"></i>
                         </button>
                     </div>
@@ -2815,12 +2815,12 @@
             // 更新日视图日期
             elements.currentDay.textContent = formatDate(AppState.currentDate, 'full');
             
-            // 更新周视图日期
+            // 更新周视图日期（使用新的格式化函数）
             const { year, week } = AppState.currentWeek;
-            elements.currentWeek.textContent = `${year}年第${week}周`;
+            elements.currentWeek.textContent = formatWeekDisplay(year, week);
             
             // 更新月视图日期
-            elements.currentMonth.textContent = `${AppState.currentYear}年${AppState.currentMonth + 1}月`;
+            elements.currentMonth.textContent = `${AppState.currentYear}年${String(AppState.currentMonth + 1).padStart(2, '0')}月`;
         }
 
         // 格式化日期
@@ -2850,15 +2850,23 @@
             return `${month}月${day}日`;
         }
 
-        // 获取周数
+        // 获取周数（统一按周一开始计算）
         function getWeekNumber(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
             
-            return { year: d.getUTCFullYear(), week: weekNo };
+            // 设置到本周一
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 调整周日的情况
+            d.setDate(diff);
+            
+            // 获取当年第一天
+            const yearStart = new Date(d.getFullYear(), 0, 1);
+            
+            // 计算周数
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            
+            return { year: d.getFullYear(), week: weekNo };
         }
 
         // 获取周的开始和结束日期
@@ -2880,6 +2888,60 @@
             endOfWeek.setHours(23, 59, 59, 999);
             
             return { start: startOfWeek, end: endOfWeek };
+        }
+
+        // 获取月份内的周数（按周一为一周开始计算）
+        function getMonthWeekNumber(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            
+            // 获取本月第一天
+            const firstDayOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+            
+            // 获取本月第一天是星期几
+            const firstDayWeek = firstDayOfMonth.getDay() || 7;
+            
+            // 计算本月第一个周一的日期
+            const firstMonday = new Date(firstDayOfMonth);
+            const daysToFirstMonday = (8 - firstDayWeek) % 7;
+            firstMonday.setDate(firstDayOfMonth.getDate() + daysToFirstMonday);
+            
+            // 如果日期在第一个周一之前，返回第1周
+            if (d < firstMonday) {
+                return 1;
+            }
+            
+            // 计算是第几周
+            const weekDiff = Math.floor((d - firstMonday) / (7 * 24 * 60 * 60 * 1000));
+            return weekDiff + 1;
+        }
+
+        // 格式化周显示文本
+        function formatWeekDisplay(year, week) {
+            const { start, end } = getWeekDates(year, week);
+            const month = start.getMonth() + 1;
+            const monthWeek = getMonthWeekNumber(start);
+            
+            const startMonth = String(start.getMonth() + 1).padStart(2, '0');
+            const startDay = String(start.getDate()).padStart(2, '0');
+            const endMonth = String(end.getMonth() + 1).padStart(2, '0');
+            const endDay = String(end.getDate()).padStart(2, '0');
+            
+            return `${year}年${startMonth}月第${monthWeek}周（${startMonth}.${startDay}-${endMonth}.${endDay}）`;
+        }
+
+        // 格式化周显示文本（简化版，用于小尺寸区域）
+        function formatWeekDisplayShort(year, week) {
+            const { start, end } = getWeekDates(year, week);
+            const month = start.getMonth() + 1;
+            const monthWeek = getMonthWeekNumber(start);
+            
+            const startMonth = String(start.getMonth() + 1).padStart(2, '0');
+            const startDay = String(start.getDate()).padStart(2, '0');
+            const endMonth = String(end.getMonth() + 1).padStart(2, '0');
+            const endDay = String(end.getDate()).padStart(2, '0');
+            
+            return `${startMonth}月第${monthWeek}周（${startMonth}.${startDay}-${endMonth}.${endDay}）`;
         }
 
         // 生成唯一ID

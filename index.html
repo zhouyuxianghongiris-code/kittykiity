@@ -1,389 +1,2894 @@
-// 测试脚本：验证对话式记账语义解析功能
-
-// 模拟ExpenseParser类的核心逻辑
-class TestExpenseParser {
-    constructor() {
-        // 收支类型关键词
-        this.typeKeywords = {
-            income: [
-                '收入', '工资', '薪水', '薪资', '奖金', '红包', '转账', '兼职', '赚', '到账', 
-                '入账', '进账', '回款', '稿费', '劳务费', '补贴', '报销', '退款', '给了我', 
-                '给我', '发给我', '汇给我', '转给我', '打给我', '赞助', '资助', '奖励', '礼金',
-                'AA返还', 'AA钱', '返还', '还给我', '退回', '退给我', '报销款', '报销费用',
-                '转我', '汇我', '打我', '发我', '给我钱', '转钱给我', '汇钱给我', '打钱给我'
-            ],
-            expense: [
-                '花', '消费', '支出', '买', '购', '支付', '付', '花费', '开销', '费用', 
-                '成本', '价格', '价值', '需要', '用了', '用掉', '花掉', '花了', '消费了', 
-                '支出了', '支付了', '付了', '花了', '买了', '买东西', '开销', '花费', '支出',
-                '转给', '汇给', '打给', '发给', '转钱给', '汇钱给', '打钱给', '发钱给', '支付给',
-                '付给', '转给别人', '汇给别人', '打给别人', '发给别人'
-            ]
-        };
-        
-        // 分类关键词
-        this.categoryKeywords = {
-            '餐饮': ['饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅', '饭店', '食堂', 
-                   '早餐', '午餐', '晚餐', '夜宵', '吃饭', '用餐', '就餐', '聚餐', '饭局'],
-            '交通': ['车', '打车', '滴滴', '优步', '公交', '地铁', '出租', '地铁卡', '公交卡', 
-                   '加油', '汽油', '柴油', '停车', '停车费', '过路费', '高速费', '高铁', '火车', 
-                   '飞机', '机票', '火车票', '高铁票', '船票', '轮渡', '打车费', '交通费'],
-            '购物': ['买', '购', '衣服', '鞋', '包', '化妆品', '护肤品', '电子产品', '手机', 
-                   '电脑', '平板', '耳机', '手表', '首饰', '项链', '戒指', '耳环', '眼镜', 
-                   '帽子', '围巾', '手套', '裤子', '裙子', '上衣', '外套', '内衣', '袜子'],
-            '娱乐': ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票', '游乐园', 
-                   '演唱会', '音乐会', '话剧', '歌剧', '舞剧', '相声', '小品', '魔术', '杂技', 
-                   '马戏团', 'KTV', '酒吧', '夜店', '桌游', '密室逃脱', '剧本杀'],
-            '医疗': ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术', '药品', 
-                   '处方药', '非处方药', '中药', '西药', '草药', '针剂', '输液', '打针', '疫苗', 
-                   '体检', '验血', '验尿', 'CT', '核磁共振', 'B超', 'X光'],
-            '水电': ['电', '水', '燃气', '网', '话费', '宽带', '物业', '电费', '水费', 
-                   '燃气费', '网费', '电话费', '手机费', '物业费', '供暖费', '取暖费'],
-            '住房': ['房', '租', '贷', '公寓', '宿舍', '装修', '房租', '房贷', '房租费', 
-                   '房贷月供', '装修费', '家具', '家电', '沙发', '床', '桌子', '椅子'],
-            '教育': ['学', '书', '课程', '培训', '学费', '辅导', '考试', '学校', '大学', 
-                   '中学', '小学', '幼儿园', '托儿所', '辅导班', '培训班', '补习班'],
-            '亲属赠予': ['妈妈', '爸爸', '妈', '爸', '母亲', '父亲', '奶奶', '爷爷', '姥姥', 
-                      '姥爷', '叔叔', '阿姨', '姑姑', '舅舅', '姨妈', '舅妈', '姑妈', '伯母', 
-                      '婶婶', '姨父', '姑父', '舅舅', '侄子', '侄女', '外甥', '外甥女', '表哥', 
-                      '表姐', '表弟', '表妹', '家人', '亲戚', '亲属'],
-            '其他': []
-        };
-    }
-    
-    // 提取金额
-    extractAmount(message) {
-        const amountPatterns = [
-            /(\d+\.?\d*)\s*([元块]|块钱|人民币|￥)/g,
-            /([$￥])\s*(\d+\.?\d*)/g,
-            /(\d+\.?\d*)\s*([$￥])/g,
-            /(\d+\.?\d*)\s*(美元|美金|欧元|英镑)/g
-        ];
-        
-        let amount = null;
-        
-        for (const pattern of amountPatterns) {
-            const match = pattern.exec(message);
-            if (match) {
-                if (match[1] === '$' || match[1] === '￥') {
-                    amount = parseFloat(match[2]);
-                } else if (match[2] === '$' || match[2] === '￥') {
-                    amount = parseFloat(match[1]);
-                } else {
-                    amount = parseFloat(match[1]);
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI记账助手 - 对话式智能记账</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ff69b4',
+                        secondary: '#ffb6c1',
+                        accent: '#ff1493',
+                        light: '#fff0f5',
+                        dark: '#800080',
+                        'pink-light': '#ffc0cb',
+                        'pink-medium': '#ff69b4',
+                        'pink-dark': '#c71585',
+                        'pink-soft': '#fff5f7',
+                        'pink-pastel': '#ffb6c1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    },
+                    borderRadius: {
+                        'xl': '1rem',
+                        '2xl': '1.5rem',
+                        '3xl': '2rem',
+                        '4xl': '2.5rem',
+                        'full': '9999px',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(255, 105, 180, 0.15)',
+                        'cute': '0 8px 30px rgba(255, 105, 180, 0.2)',
+                    }
                 }
-                break;
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 105, 180, 0.2);
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(255, 105, 180, 0.2);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(255, 105, 180, 0.2), 0 10px 10px -5px rgba(255, 105, 180, 0.1);
+            }
+            .hello-kitty-bg {
+                background: linear-gradient(135deg, #fff0f5 0%, #ffc0cb 50%, #ffb6c1 100%);
+            }
+            .bubble-pink {
+                background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 100%);
+                border-radius: 20px 20px 20px 5px;
+            }
+            .bubble-white {
+                background: white;
+                border-radius: 20px 20px 5px 20px;
+            }
+            .cute-button {
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            .cute-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 105, 180, 0.3);
+            }
+            .cute-button:active {
+                transform: translateY(0);
+            }
+            .cute-input {
+                transition: all 0.3s ease;
+                border: 2px solid #ffb6c1;
+            }
+            .cute-input:focus {
+                border-color: #ff69b4;
+                box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
+            }
+            .bow-decoration::after {
+                content: '';
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                width: 20px;
+                height: 20px;
+                background-image: url('https://p11-doubao-search-sign.byteimg.com/labis/67e57efa5ad22a1bc0c29fd0fb448acf~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=mGvGa4kZTyv%2F1Tdlq7%2FNRIji8t8%3D');
+                background-size: contain;
+                background-repeat: no-repeat;
+                transform: rotate(45deg);
+            }
+        }
+    </style>
+</head>
+<body class="hello-kitty-bg min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
+        <!-- 头部 -->
+        <header class="flex justify-between items-center mb-4 sm:mb-8">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <img src="https://p26-doubao-search-sign.byteimg.com/isp-i18n-media/image/74ef7bbf2c2f6b98f868b4fb94734519~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=dKxr%2BzPld5kWji19dVVGzWYDFSg%3D" alt="Hello Kitty记账助手" class="h-12 w-12 sm:h-16 sm:w-16 rounded-full border-3 sm:border-4 border-pink-light animate-bounce-slow">
+                <div>
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-pink-dark text-shadow">Hello Kitty记账</h1>
+                    <p class="text-pink-medium text-xs sm:text-sm">和Kitty一起记录美好生活</p>
+                </div>
+            </div>
+            <div class="flex space-x-2 sm:space-x-3">
+                <button id="btn-stats" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-xl sm:rounded-2xl shadow-soft cute-button flex items-center text-xs sm:text-sm">
+                    <i class="fa fa-bar-chart mr-1 sm:mr-2"></i> <span class="hidden sm:inline">统计</span>
+                </button>
+                <button id="btn-settings" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-pink-soft text-pink-dark rounded-xl sm:rounded-2xl shadow-soft cute-button border-2 border-pink-light">
+                    <i class="fa fa-cog"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 视图切换标签 -->
+        <div class="flex mb-4 sm:mb-6 bg-pink-soft rounded-2xl sm:rounded-3xl shadow-cute p-1 sm:p-2 overflow-x-auto scrollbar-hide">
+            <button id="tab-chat" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-primary text-white font-medium cute-button text-center text-xs sm:text-sm whitespace-nowrap">
+                <i class="fa fa-comments mr-1 sm:mr-2"></i><span class="hidden sm:inline">对话记账</span>
+            </button>
+            <button id="tab-daily" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
+                <i class="fa fa-calendar-day mr-1 sm:mr-2"></i><span class="hidden sm:inline">日账本</span>
+            </button>
+            <button id="tab-weekly" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
+                <i class="fa fa-calendar-week mr-1 sm:mr-2"></i><span class="hidden sm:inline">周账本</span>
+            </button>
+            <button id="tab-monthly" class="flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-pink-dark font-medium hover:bg-pink-light transition-colors cute-button text-center text-xs sm:text-sm whitespace-nowrap">
+                <i class="fa fa-calendar-alt mr-1 sm:mr-2"></i><span class="hidden sm:inline">月账本</span>
+            </button>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="relative">
+            <!-- 对话记账视图 -->
+            <div id="view-chat" class="bg-white rounded-2xl sm:rounded-3xl shadow-cute overflow-hidden animate-fade-in border-3 sm:border-4 border-pink-light">
+                <!-- 对话记录区 -->
+                <div id="chat-messages" class="h-[50vh] sm:h-96 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide">
+                    <!-- AI欢迎消息 -->
+                    <div class="flex items-start mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-white mr-2 sm:mr-3 flex-shrink-0 relative bow-decoration">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/isp-i18n-media/image/74ef7bbf2c2f6b98f868b4fb94734519~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=dKxr%2BzPld5kWji19dVVGzWYDFSg%3D" alt="Hello Kitty" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                        </div>
+                        <div class="bubble-pink p-3 sm:p-4 max-w-[80%] shadow-soft">
+                            <p class="text-pink-dark font-medium">你好！我是你的Hello Kitty记账助手～ 我可以智能识别你输入的自然语言，自动提取金额、日期和分类信息哦～</p>
+                            <div class="mt-3 p-3 bg-white rounded-2xl border-2 border-pink-light">
+                                <p class="font-medium text-pink-dark text-sm sm:text-base">我能理解的表达方式：</p>
+                                <ul class="list-disc list-inside mt-2 space-y-1 text-pink-medium">
+                                    <li class="text-xs sm:text-sm">"今天买午餐花了25元"</li>
+                                    <li class="text-xs sm:text-sm">"昨天打车花了30元"</li>
+                                    <li class="text-xs sm:text-sm">"本月工资收入5000元"</li>
+                                    <li class="text-xs sm:text-sm">"7月15日买了一台电脑，价格是4999元"</li>
+                                    <li class="text-xs sm:text-sm">"前天看病花了120元"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 示例消息 -->
+                    <div class="flex items-start justify-end mb-3 sm:mb-4">
+                        <div class="bubble-white p-3 sm:p-4 max-w-[80%] shadow-soft border-2 border-pink-light">
+                            <p class="text-pink-dark text-sm sm:text-base">今天早上买咖啡花了15元</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-pink-light flex items-center justify-center text-pink-dark ml-2 sm:ml-3 flex-shrink-0">
+                            <i class="fa fa-user text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-white mr-2 sm:mr-3 flex-shrink-0 relative bow-decoration">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/isp-i18n-media/image/74ef7bbf2c2f6b98f868b4fb94734519~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=dKxr%2BzPld5kWji19dVVGzWYDFSg%3D" alt="Hello Kitty" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                        </div>
+                        <div class="bubble-pink p-3 sm:p-4 max-w-[80%] shadow-soft">
+                            <p class="text-pink-dark font-medium text-sm sm:text-base">已记录：今天的咖啡支出 15.00元，分类为"餐饮"～</p>
+                            <div class="mt-3 p-3 bg-white rounded-2xl border-2 border-pink-light">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-light flex items-center justify-center text-white mr-2 sm:mr-3">
+                                            <i class="fa fa-cutlery text-sm sm:text-lg"></i>
+                                        </div>
+                                        <span class="text-xs sm:text-sm text-pink-dark font-medium">餐饮</span>
+                                    </div>
+                                    <span class="text-xs sm:text-sm font-bold text-pink-dark">-15.00元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 输入区域 -->
+                <div class="border-t-2 border-pink-light p-3 sm:p-4">
+                    <div class="flex items-center">
+                        <button id="btn-voice" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-pink-soft flex items-center justify-center text-pink-dark mr-2 sm:mr-3 hover:bg-pink-light transition-colors cute-button">
+                            <i class="fa fa-microphone text-lg sm:text-xl"></i>
+                        </button>
+                        <div class="flex-1 relative">
+                            <input type="text" id="chat-input" class="w-full cute-input rounded-2xl sm:rounded-3xl py-2 sm:py-3 px-4 sm:px-6 focus:outline-none text-sm" placeholder="和Kitty说说话，记录你的收支情况...">
+                            <div id="suggestions" class="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-cute border-2 border-pink-light hidden z-10">
+                                <ul class="py-2">
+                                    <li class="px-4 py-2 hover:bg-pink-soft cursor-pointer text-pink-dark">今天买午餐花了25元</li>
+                                    <li class="px-4 py-2 hover:bg-pink-soft cursor-pointer text-pink-dark">昨天打车花了30元</li>
+                                    <li class="px-4 py-2 hover:bg-pink-soft cursor-pointer text-pink-dark">本月工资收入5000元</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-white ml-2 sm:ml-3 hover:bg-pink-dark transition-colors cute-button">
+                            <i class="fa fa-paper-plane text-lg sm:text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日账本视图 -->
+            <div id="view-daily" class="bg-white rounded-3xl shadow-cute overflow-hidden hidden animate-fade-in border-4 border-pink-light">
+                <div class="p-4 border-b-2 border-pink-light flex justify-between items-center bg-pink-soft">
+                    <h2 class="text-xl font-bold text-pink-dark">日账本</h2>
+                    <div class="flex space-x-3">
+                        <button id="prev-day" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <span id="current-day" class="text-pink-dark font-bold text-lg px-4 py-2 bg-white rounded-2xl shadow-soft">2025年7月21日</span>
+                        <button id="next-day" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-pink-dark hover:bg-pink-light transition-colors cute-button">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-sm text-gray-500">今日支出</span>
+                            <p class="text-xl font-bold text-red-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">今日收入</span>
+                            <p class="text-xl font-bold text-green-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">今日结余</span>
+                            <p class="text-xl font-bold text-blue-500">¥0.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">今日记录</h3>
+                        <div id="daily-records" class="space-y-2">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa fa-clipboard-list text-4xl mb-2"></i>
+                                <p>今天还没有记账记录</p>
+                                <p class="text-sm mt-2">点击上方"对话记账"开始记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 周账本视图 -->
+            <div id="view-weekly" class="bg-white rounded-xl shadow-lg overflow-hidden hidden animate-fade-in">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">周账本</h2>
+                    <div class="flex space-x-2">
+                        <button id="prev-week" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <span id="current-week" class="text-gray-700 font-medium">2025年第29周</span>
+                        <button id="next-week" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-sm text-gray-500">本周支出</span>
+                            <p class="text-xl font-bold text-red-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">本周收入</span>
+                            <p class="text-xl font-bold text-green-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">本周结余</span>
+                            <p class="text-xl font-bold text-blue-500">¥0.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">周支出分布</h3>
+                        <div class="h-64">
+                            <canvas id="weekly-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">本周记录</h3>
+                        <div id="weekly-records" class="space-y-2">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa fa-clipboard-list text-4xl mb-2"></i>
+                                <p>本周还没有记账记录</p>
+                                <p class="text-sm mt-2">点击上方"对话记账"开始记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 月账本视图 -->
+            <div id="view-monthly" class="bg-white rounded-xl shadow-lg overflow-hidden hidden animate-fade-in">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">月账本</h2>
+                    <div class="flex space-x-2">
+                        <button id="prev-month" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <span id="current-month" class="text-gray-700 font-medium">2025年7月</span>
+                        <button id="next-month" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-sm text-gray-500">本月支出</span>
+                            <p class="text-xl font-bold text-red-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">本月收入</span>
+                            <p class="text-xl font-bold text-green-500">¥0.00</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-500">本月结余</span>
+                            <p class="text-xl font-bold text-blue-500">¥0.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">月支出分布</h3>
+                        <div class="h-64">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">本月记录</h3>
+                        <div id="monthly-records" class="space-y-2">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa fa-clipboard-list text-4xl mb-2"></i>
+                                <p>本月还没有记账记录</p>
+                                <p class="text-sm mt-2">点击上方"对话记账"开始记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计视图 (弹窗) -->
+            <div id="view-stats" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-800">收支统计</h2>
+                        <button id="close-stats" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">支出分类占比</h3>
+                                <div class="h-64">
+                                    <canvas id="expense-chart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">月度收支趋势</h3>
+                                <div class="h-64">
+                                    <canvas id="trend-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">支出最多的分类</h3>
+                            <div id="top-categories" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <!-- 动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部快捷功能区 -->
+        <div class="mt-4 sm:mt-6 grid grid-cols-4 gap-3 sm:gap-4">
+            <button class="category-btn flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-soft hover:shadow-cute transition-all card-hover relative bow-decoration" data-category="餐饮">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-pink-light flex items-center justify-center text-pink-dark mb-1 sm:mb-2">
+                    <i class="fa fa-cutlery text-lg sm:text-xl"></i>
+                </div>
+                <span class="text-xs sm:text-sm text-pink-dark font-medium">餐饮</span>
+            </button>
+            <button class="category-btn flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-soft hover:shadow-cute transition-all card-hover" data-category="购物">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-pink-medium flex items-center justify-center text-white mb-1 sm:mb-2">
+                    <i class="fa fa-shopping-bag text-lg sm:text-xl"></i>
+                </div>
+                <span class="text-xs sm:text-sm text-pink-dark font-medium">购物</span>
+            </button>
+            <button class="category-btn flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-soft hover:shadow-cute transition-all card-hover" data-category="交通">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-pink-dark flex items-center justify-center text-white mb-1 sm:mb-2">
+                    <i class="fa fa-car text-lg sm:text-xl"></i>
+                </div>
+                <span class="text-xs sm:text-sm text-pink-dark font-medium">交通</span>
+            </button>
+            <button class="category-btn flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-soft hover:shadow-cute transition-all card-hover" data-category="娱乐">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-pink-medium flex items-center justify-center text-white mb-1 sm:mb-2">
+                    <i class="fa fa-film text-lg sm:text-xl"></i>
+                </div>
+                <span class="text-xs sm:text-sm text-pink-dark font-medium">娱乐</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态
+        const AppState = {
+            currentView: 'chat',
+            currentDate: new Date(),
+            currentWeek: getWeekNumber(new Date()),
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            records: JSON.parse(localStorage.getItem('expenseRecords')) || [],
+            categories: [
+                { id: 'food', name: '餐饮', icon: 'cutlery', color: 'pink-light', keywords: ['吃', '饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅', '早餐', '午餐', '晚餐', '零食'] },
+                { id: 'shopping', name: '购物', icon: 'shopping-bag', color: 'pink-medium', keywords: ['买', '购', '衣服', '鞋', '包', '化妆品', '电子产品', '淘宝', '京东'] },
+                { id: 'transport', name: '交通', icon: 'car', color: 'pink-dark', keywords: ['车', '打车', '公交', '地铁', '出租', '滴滴', '加油', '停车', '高铁', '飞机'] },
+                { id: 'entertainment', name: '娱乐', icon: 'film', color: 'pink-medium', keywords: ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票', 'KTV', '演唱会'] },
+                { id: 'clothing', name: '服饰', icon: 'tshirt-crew', color: 'pink-light', keywords: ['衣服', '裤子', '裙子', '鞋', '包', '帽子', '围巾', '袜子', '内衣'] },
+                { id: 'beauty', name: '美妆', icon: 'sparkles', color: 'pink-dark', keywords: ['化妆品', '护肤品', '面膜', '口红', '粉底', '眼影', '香水', '美容'] },
+                { id: 'housing', name: '住房', icon: 'home', color: 'pink-medium', keywords: ['房', '租', '贷', '公寓', '宿舍', '装修', '家具', '家电'] },
+                { id: 'utilities', name: '水电', icon: 'bolt', color: 'pink-light', keywords: ['电', '水', '燃气', '网', '话费', '宽带', '物业', '电费', '水费'] },
+                { id: 'communication', name: '通讯', icon: 'mobile-alt', color: 'pink-dark', keywords: ['话费', '流量', '宽带', '手机', '通讯', '电信', '移动', '联通'] },
+                { id: 'medical', name: '医疗', icon: 'stethoscope', color: 'pink-medium', keywords: ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术', '看病', '药品'] },
+                { id: 'education', name: '教育', icon: 'book', color: 'pink-light', keywords: ['学', '书', '课程', '培训', '学费', '辅导', '考试', '学校', '书本'] },
+                { id: 'gifts', name: '人情', icon: 'gift', color: 'pink-dark', keywords: ['礼物', '红包', '人情', '送礼', '生日', '结婚', '节日'] },
+                { id: 'pets', name: '宠物', icon: 'paw', color: 'pink-medium', keywords: ['宠物', '猫', '狗', '猫粮', '狗粮', '宠物用品', '宠物医疗'] },
+                { id: 'other', name: '其他', icon: 'heart', color: 'pink-light', keywords: ['其他', '杂项', '其他支出'] }
+            ],
+            charts: {}
+        };
+
+        // DOM 元素
+        const elements = {
+            // 视图切换
+            tabChat: document.getElementById('tab-chat'),
+            tabDaily: document.getElementById('tab-daily'),
+            tabWeekly: document.getElementById('tab-weekly'),
+            tabMonthly: document.getElementById('tab-monthly'),
+            
+            // 视图容器
+            viewChat: document.getElementById('view-chat'),
+            viewDaily: document.getElementById('view-daily'),
+            viewWeekly: document.getElementById('view-weekly'),
+            viewMonthly: document.getElementById('view-monthly'),
+            viewStats: document.getElementById('view-stats'),
+            
+            // 对话相关
+            chatMessages: document.getElementById('chat-messages'),
+            chatInput: document.getElementById('chat-input'),
+            btnSend: document.getElementById('btn-send'),
+            btnVoice: document.getElementById('btn-voice'),
+            suggestions: document.getElementById('suggestions'),
+            
+            // 统计相关
+            btnStats: document.getElementById('btn-stats'),
+            closeStats: document.getElementById('close-stats'),
+            
+            // 日期导航
+            prevDay: document.getElementById('prev-day'),
+            nextDay: document.getElementById('next-day'),
+            currentDay: document.getElementById('current-day'),
+            prevWeek: document.getElementById('prev-week'),
+            nextWeek: document.getElementById('next-week'),
+            currentWeek: document.getElementById('current-week'),
+            prevMonth: document.getElementById('prev-month'),
+            nextMonth: document.getElementById('next-month'),
+            currentMonth: document.getElementById('current-month'),
+            
+            // 记录容器
+            dailyRecords: document.getElementById('daily-records'),
+            weeklyRecords: document.getElementById('weekly-records'),
+            monthlyRecords: document.getElementById('monthly-records'),
+            
+            // 分类快捷按钮
+            categoryBtns: document.querySelectorAll('.category-btn')
+        };
+
+        // 初始化应用
+        function initApp() {
+            // 设置当前日期显示
+            updateDateDisplay();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 加载记录
+            loadRecords();
+            
+            // 渲染初始视图
+            renderView('chat');
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 视图切换
+            elements.tabChat.addEventListener('click', () => switchTab('chat'));
+            elements.tabDaily.addEventListener('click', () => switchTab('daily'));
+            elements.tabWeekly.addEventListener('click', () => switchTab('weekly'));
+            elements.tabMonthly.addEventListener('click', () => switchTab('monthly'));
+            
+            // 发送消息
+            elements.btnSend.addEventListener('click', sendMessage);
+            elements.chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            // 语音输入
+            elements.btnVoice.addEventListener('click', toggleVoiceInput);
+            
+            // 统计视图
+            elements.btnStats.addEventListener('click', showStats);
+            elements.closeStats.addEventListener('click', hideStats);
+            
+            // 日期导航
+            elements.prevDay.addEventListener('click', () => navigateDate(-1, 'day'));
+            elements.nextDay.addEventListener('click', () => navigateDate(1, 'day'));
+            elements.prevWeek.addEventListener('click', () => navigateDate(-1, 'week'));
+            elements.nextWeek.addEventListener('click', () => navigateDate(1, 'week'));
+            elements.prevMonth.addEventListener('click', () => navigateDate(-1, 'month'));
+            elements.nextMonth.addEventListener('click', () => navigateDate(1, 'month'));
+            
+            // 分类快捷按钮
+            elements.categoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    elements.chatInput.value = `今天${category}花了`;
+                    elements.chatInput.focus();
+                });
+            });
+            
+            // 输入框建议
+            elements.chatInput.addEventListener('focus', showSuggestions);
+            elements.chatInput.addEventListener('blur', () => {
+                setTimeout(() => elements.suggestions.classList.add('hidden'), 200);
+            });
+            
+            // 点击建议项
+            document.querySelectorAll('#suggestions li').forEach(item => {
+                item.addEventListener('click', () => {
+                    elements.chatInput.value = item.textContent;
+                    elements.suggestions.classList.add('hidden');
+                    elements.chatInput.focus();
+                });
+            });
+        }
+
+        // 切换标签
+        function switchTab(tab) {
+            // 更新标签样式
+            const tabs = ['chat', 'daily', 'weekly', 'monthly'];
+            tabs.forEach(t => {
+                const tabElement = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    tabElement.classList.add('bg-primary', 'text-white');
+                    tabElement.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                } else {
+                    tabElement.classList.remove('bg-primary', 'text-white');
+                    tabElement.classList.add('text-gray-600', 'hover:bg-gray-100');
+                }
+            });
+            
+            // 渲染视图
+            renderView(tab);
+        }
+
+        // 渲染视图
+        function renderView(view) {
+            // 隐藏所有视图
+            elements.viewChat.classList.add('hidden');
+            elements.viewDaily.classList.add('hidden');
+            elements.viewWeekly.classList.add('hidden');
+            elements.viewMonthly.classList.add('hidden');
+            
+            // 显示当前视图
+            switch(view) {
+                case 'chat':
+                    elements.viewChat.classList.remove('hidden');
+                    elements.chatInput.focus();
+                    break;
+                case 'daily':
+                    elements.viewDaily.classList.remove('hidden');
+                    renderDailyView();
+                    break;
+                case 'weekly':
+                    elements.viewWeekly.classList.remove('hidden');
+                    renderWeeklyView();
+                    break;
+                case 'monthly':
+                    elements.viewMonthly.classList.remove('hidden');
+                    renderMonthlyView();
+                    break;
+            }
+            
+            // 更新当前视图
+            AppState.currentView = view;
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const message = elements.chatInput.value.trim();
+            if (!message) return;
+            
+            // 添加用户消息到聊天记录
+            addMessage(message, 'user');
+            
+            // 清空输入框
+            elements.chatInput.value = '';
+            elements.suggestions.classList.add('hidden');
+            
+            // 处理消息
+            processMessage(message);
+        }
+
+        // 添加消息到聊天记录
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = sender === 'user' 
+                ? 'flex items-start justify-end mb-4' 
+                : 'flex items-start mb-4';
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="bg-primary rounded-lg p-3 max-w-[80%]">
+                        <p class="text-white">${text}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 ml-3 flex-shrink-0">
+                        <i class="fa fa-user"></i>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
+                        <i class="fa fa-robot"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                        <p class="text-gray-800 text-sm sm:text-base">${text}</p>
+                    </div>
+                `;
+            }
+            
+            elements.chatMessages.appendChild(messageDiv);
+            
+            // 滚动到底部
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+
+        // 添加带记录卡片的消息
+        function addMessageWithRecord(text, record) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start mb-4';
+            
+            const category = AppState.categories.find(c => c.id === record.category) || AppState.categories[AppState.categories.length - 1];
+            
+            messageDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 mr-3 flex-shrink-0">
+                    <img src="https://p26-doubao-search-sign.byteimg.com/isp-i18n-media/image/74ef7bbf2c2f6b98f868b4fb94734519~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=dKxr%2BzPld5kWji19dVVGzWYDFSg%3D" alt="Hello Kitty" class="w-8 h-8 rounded-full">
+                </div>
+                <div class="bg-pink-50 rounded-lg p-3 max-w-[80%] border-2 border-pink-200">
+                    <p class="text-gray-800 text-sm sm:text-base">${text}</p>
+                    <div class="mt-2 p-2 bg-white rounded-md border border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-${category.color}-100 flex items-center justify-center text-${category.color}-500 mr-2">
+                                    <i class="fa fa-${category.icon}"></i>
+                                </div>
+                                <span class="text-xs sm:text-sm text-gray-600">${category.name}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-xs sm:text-sm font-medium ${record.type === 'expense' ? 'text-red-500' : 'text-green-500'} mr-2">${record.type === 'expense' ? '-' : '+'}${record.amount.toFixed(2)}元</span>
+                                <button class="edit-record-btn w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 transition-colors" data-record-id="${record.id}">
+                                    <i class="fa fa-pencil text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            elements.chatMessages.appendChild(messageDiv);
+            
+            // 绑定编辑按钮事件
+            const editBtn = messageDiv.querySelector('.edit-record-btn');
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const recordId = e.target.closest('.edit-record-btn').dataset.recordId;
+                    editExistingRecord(recordId);
+                });
+            }
+            
+            // 滚动到底部
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+
+        // 添加AI正在输入的动画
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'flex items-start mb-4 animate-fade-in';
+            typingDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 mr-3 flex-shrink-0">
+                    <img src="https://p26-doubao-search-sign.byteimg.com/isp-i18n-media/image/74ef7bbf2c2f6b98f868b4fb94734519~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787041074&x-signature=dKxr%2BzPld5kWji19dVVGzWYDFSg%3D" alt="Hello Kitty" class="w-8 h-8 rounded-full">
+                </div>
+                <div class="bg-pink-50 rounded-lg p-3 max-w-[80%] border-2 border-pink-200">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0s"></div>
+                        <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            elements.chatMessages.appendChild(typingDiv);
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+        
+        // 移除AI正在输入的动画
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) {
+                typingDiv.remove();
             }
         }
         
-        // 如果没有找到带单位的金额，尝试找纯数字
-        if (amount === null) {
-            const numMatch = message.match(/(\d+\.?\d*)/);
-            if (numMatch) {
-                amount = parseFloat(numMatch[1]);
+        // 专业的对话式记账语义解析助手
+        class ExpenseParser {
+            constructor() {
+                // 收支类型关键词
+                this.typeKeywords = {
+                    income: [
+                        '收入', '工资', '薪水', '薪资', '奖金', '红包', '转账', '兼职', '赚', '到账', 
+                        '入账', '进账', '回款', '稿费', '劳务费', '补贴', '报销', '退款', '给了我', 
+                        '给我', '发给我', '汇给我', '转给我', '打给我', '赞助', '资助', '奖励', '礼金',
+                        'AA返还', 'AA钱', '返还', '还给我', '退回', '退给我', '报销款', '报销费用',
+                        '转我', '汇我', '打我', '发我', '给我钱', '转钱给我', '汇钱给我', '打钱给我'
+                    ],
+                    expense: [
+                        '花', '消费', '支出', '买', '购', '支付', '付', '花费', '开销', '费用', 
+                        '成本', '价格', '价值', '需要', '用了', '用掉', '花掉', '花了', '消费了', 
+                        '支出了', '支付了', '付了', '花了', '买了', '买东西', '开销', '花费', '支出',
+                        '转给', '汇给', '打给', '发给', '转钱给', '汇钱给', '打钱给', '发钱给', '支付给',
+                        '付给', '转给别人', '汇给别人', '打给别人', '发给别人'
+                    ]
+                };
+                
+                // 分类关键词
+                this.categoryKeywords = {
+                    '餐饮': ['饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅', '饭店', '食堂', 
+                           '早餐', '午餐', '晚餐', '夜宵', '吃饭', '用餐', '就餐', '聚餐', '饭局'],
+                    '交通': ['车', '打车', '滴滴', '优步', '公交', '地铁', '出租', '地铁卡', '公交卡', 
+                           '加油', '汽油', '柴油', '停车', '停车费', '过路费', '高速费', '高铁', '火车', 
+                           '飞机', '机票', '火车票', '高铁票', '船票', '轮渡', '打车费', '交通费'],
+                    '购物': ['买', '购', '衣服', '鞋', '包', '化妆品', '护肤品', '电子产品', '手机', 
+                           '电脑', '平板', '耳机', '手表', '首饰', '项链', '戒指', '耳环', '眼镜', 
+                           '帽子', '围巾', '手套', '裤子', '裙子', '上衣', '外套', '内衣', '袜子'],
+                    '娱乐': ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票', '游乐园', 
+                           '演唱会', '音乐会', '话剧', '歌剧', '舞剧', '相声', '小品', '魔术', '杂技', 
+                           '马戏团', 'KTV', '酒吧', '夜店', '桌游', '密室逃脱', '剧本杀'],
+                    '医疗': ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术', '药品', 
+                           '处方药', '非处方药', '中药', '西药', '草药', '针剂', '输液', '打针', '疫苗', 
+                           '体检', '验血', '验尿', 'CT', '核磁共振', 'B超', 'X光'],
+                    '水电': ['电', '水', '燃气', '网', '话费', '宽带', '物业', '电费', '水费', 
+                           '燃气费', '网费', '电话费', '手机费', '物业费', '供暖费', '取暖费'],
+                    '住房': ['房', '租', '贷', '公寓', '宿舍', '装修', '房租', '房贷', '房租费', 
+                           '房贷月供', '装修费', '家具', '家电', '沙发', '床', '桌子', '椅子'],
+                    '教育': ['学', '书', '课程', '培训', '学费', '辅导', '考试', '学校', '大学', 
+                           '中学', '小学', '幼儿园', '托儿所', '辅导班', '培训班', '补习班'],
+                    '亲属赠予': ['妈妈', '爸爸', '妈', '爸', '母亲', '父亲', '奶奶', '爷爷', '姥姥', 
+                              '姥爷', '叔叔', '阿姨', '姑姑', '舅舅', '姨妈', '舅妈', '姑妈', '伯母', 
+                              '婶婶', '姨父', '姑父', '舅舅', '侄子', '侄女', '外甥', '外甥女', '表哥', 
+                              '表姐', '表弟', '表妹', '家人', '亲戚', '亲属'],
+                    '其他': []
+                };
+                
+                // 分摊关键词
+                this.splitKeywords = [
+                    { regex: /(\d+)人.*?[Aa][Aa]/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /[Aa][Aa].*?(\d+)人/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /[Aa][Aa]/, multiplier: () => 0.5 }, // 默认两人AA
+                    { regex: /(\d+)个人.*?分摊/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /分摊.*?(\d+)个人/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /分摊/, multiplier: () => 0.5 }, // 默认两人分摊
+                    { regex: /拼单.*?(\d+)人/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /(\d+)人.*?拼单/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /拼单/, multiplier: () => 0.5 }, // 默认两人拼单
+                    { regex: /各付各的/, multiplier: () => 0.5 }, // 默认两人各付各的
+                    { regex: /均摊.*?(\d+)人/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /(\d+)人.*?均摊/, multiplier: (match) => 1 / parseInt(match[1]) },
+                    { regex: /均摊/, multiplier: () => 0.5 } // 默认两人均摊
+                ];
             }
-        }
-        
-        return amount;
-    }
-    
-    // 确定收支类型
-    determineType(message) {
-        // 优先检查AA返还场景
-        if (message.includes('AA') && (message.includes('返还') || message.includes('还') || 
-            message.includes('退') || message.includes('转我') || message.includes('给我'))) {
-            return '收入';
-        }
-        
-        // 检查报销场景
-        if (message.includes('报销')) {
-            return '收入';
-        }
-        
-        // 检查退款场景
-        if (message.includes('退款') || message.includes('退钱') || message.includes('退回')) {
-            return '收入';
-        }
-        
-        // 检查是否包含收入关键词
-        for (const keyword of this.typeKeywords.income) {
-            if (message.includes(keyword)) {
-                return '收入';
+            
+            // 提取金额
+            extractAmount(message) {
+                // 匹配数字+金额单位的模式
+                const amountPatterns = [
+                    /(\d+\.?\d*)\s*([元块]|块钱|人民币|￥)/g,
+                    /([$￥])\s*(\d+\.?\d*)/g,
+                    /(\d+\.?\d*)\s*([$￥])/g,
+                    /(\d+\.?\d*)\s*(美元|美金|欧元|英镑)/g
+                ];
+                
+                let amount = null;
+                let currency = 'CNY'; // 默认人民币
+                
+                for (const pattern of amountPatterns) {
+                    const match = pattern.exec(message);
+                    if (match) {
+                        if (match[1] === '$' || match[1] === '￥') {
+                            amount = parseFloat(match[2]);
+                            currency = match[1] === '$' ? 'USD' : 'CNY';
+                        } else if (match[2] === '$' || match[2] === '￥') {
+                            amount = parseFloat(match[1]);
+                            currency = match[2] === '$' ? 'USD' : 'CNY';
+                        } else if (match[2] === '美元' || match[2] === '美金') {
+                            amount = parseFloat(match[1]);
+                            currency = 'USD';
+                        } else if (match[2] === '欧元') {
+                            amount = parseFloat(match[1]);
+                            currency = 'EUR';
+                        } else if (match[2] === '英镑') {
+                            amount = parseFloat(match[1]);
+                            currency = 'GBP';
+                        } else {
+                            amount = parseFloat(match[1]);
+                            currency = 'CNY';
+                        }
+                        break;
+                    }
+                }
+                
+                // 如果没有找到带单位的金额，尝试找纯数字
+                if (amount === null) {
+                    const numMatch = message.match(/(\d+\.?\d*)/);
+                    if (numMatch) {
+                        amount = parseFloat(numMatch[1]);
+                        currency = 'CNY';
+                    }
+                }
+                
+                // 货币转换（简化版，实际应用中可能需要实时汇率）
+                if (amount !== null && currency !== 'CNY') {
+                    const rates = {
+                        'USD': 7.0, // 假设1美元=7人民币
+                        'EUR': 8.0, // 假设1欧元=8人民币
+                        'GBP': 9.0  // 假设1英镑=9人民币
+                    };
+                    amount *= rates[currency] || 1;
+                }
+                
+                return amount;
             }
-        }
-        
-        // 检查是否包含支出关键词
-        for (const keyword of this.typeKeywords.expense) {
-            if (message.includes(keyword)) {
+            
+            // 确定收支类型
+            determineType(message) {
+                // 优先检查AA返还场景
+                if (message.includes('AA') && (message.includes('返还') || message.includes('还') || 
+                    message.includes('退') || message.includes('转我') || message.includes('给我'))) {
+                    return '收入';
+                }
+                
+                // 检查报销场景
+                if (message.includes('报销')) {
+                    return '收入';
+                }
+                
+                // 检查退款场景
+                if (message.includes('退款') || message.includes('退钱') || message.includes('退回')) {
+                    return '收入';
+                }
+                
+                // 检查是否包含收入关键词
+                for (const keyword of this.typeKeywords.income) {
+                    if (message.includes(keyword)) {
+                        return '收入';
+                    }
+                }
+                
+                // 检查是否包含支出关键词
+                for (const keyword of this.typeKeywords.expense) {
+                    if (message.includes(keyword)) {
+                        return '支出';
+                    }
+                }
+                
+                // 检查是否有隐含的收支类型
+                // 他人转给我的钱 = 收入
+                if (message.includes('给了我') || message.includes('给我') || 
+                    message.includes('发给我') || message.includes('汇给我') || 
+                    message.includes('转给我') || message.includes('打给我') ||
+                    message.includes('转我') || message.includes('汇我') ||
+                    message.includes('打我') || message.includes('发我')) {
+                    return '收入';
+                }
+                
+                // 我转给他人的钱 = 支出
+                if (message.includes('转给') || message.includes('汇给') || 
+                    message.includes('打给') || message.includes('发给') ||
+                    message.includes('转钱给') || message.includes('汇钱给') ||
+                    message.includes('打钱给') || message.includes('发钱给')) {
+                    // 排除转给我的情况
+                    if (!message.includes('转给我') && !message.includes('汇给我') && 
+                        !message.includes('打给我') && !message.includes('发给我') &&
+                        !message.includes('转我') && !message.includes('汇我') &&
+                        !message.includes('打我') && !message.includes('发我')) {
+                        return '支出';
+                    }
+                }
+                
+                // 默认是支出
                 return '支出';
             }
-        }
-        
-        // 检查是否有隐含的收支类型
-        // 他人转给我的钱 = 收入
-        if (message.includes('给了我') || message.includes('给我') || 
-            message.includes('发给我') || message.includes('汇给我') || 
-            message.includes('转给我') || message.includes('打给我') ||
-            message.includes('转我') || message.includes('汇我') ||
-            message.includes('打我') || message.includes('发我')) {
-            return '收入';
-        }
-        
-        // 我转给他人的钱 = 支出
-        if (message.includes('转给') || message.includes('汇给') || 
-            message.includes('打给') || message.includes('发给') ||
-            message.includes('转钱给') || message.includes('汇钱给') ||
-            message.includes('打钱给') || message.includes('发钱给')) {
-            // 排除转给我的情况
-            if (!message.includes('转给我') && !message.includes('汇给我') && 
-                !message.includes('打给我') && !message.includes('发给我') &&
-                !message.includes('转我') && !message.includes('汇我') &&
-                !message.includes('打我') && !message.includes('发我')) {
-                return '支出';
-            }
-        }
-        
-        // 默认是支出
-        return '支出';
-    }
-    
-    // 确定分类
-    determineCategory(message, type) {
-        // 特殊场景优先处理
-        
-        // AA返还场景的分类
-        if (type === '收入' && message.includes('AA')) {
-            if (message.includes('打车')) {
-                return '交通';
-            } else if (message.includes('吃饭') || message.includes('餐')) {
-                return '餐饮';
-            } else if (message.includes('购物') || message.includes('买')) {
-                return '购物';
-            } else if (message.includes('电影') || message.includes('娱乐')) {
-                return '娱乐';
-            }
-        }
-        
-        // 报销场景的分类
-        if (type === '收入' && message.includes('报销')) {
-            if (message.includes('交通') || message.includes('打车')) {
-                return '交通';
-            } else if (message.includes('餐饮') || message.includes('饭')) {
-                return '餐饮';
-            } else if (message.includes('差旅') || message.includes('出差')) {
-                return '交通';
-            }
-        }
-        
-        // 退款场景的分类
-        if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
-            if (message.includes('购物') || message.includes('买')) {
-                return '购物';
-            } else if (message.includes('机票') || message.includes('车票') || message.includes('交通')) {
-                return '交通';
-            } else if (message.includes('酒店') || message.includes('住宿')) {
-                return '住房';
-            }
-        }
-        
-        // 如果是收入，先检查是否是亲属赠予
-        if (type === '收入') {
-            for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
-                if (category === '亲属赠予') {
+            
+            // 确定分类
+            determineCategory(message, type) {
+                // 特殊场景优先处理
+                
+                // AA返还场景的分类
+                if (type === '收入' && message.includes('AA')) {
+                    if (message.includes('打车')) {
+                        return '交通';
+                    } else if (message.includes('吃饭') || message.includes('餐')) {
+                        return '餐饮';
+                    } else if (message.includes('购物') || message.includes('买')) {
+                        return '购物';
+                    } else if (message.includes('电影') || message.includes('娱乐')) {
+                        return '娱乐';
+                    }
+                }
+                
+                // 报销场景的分类
+                if (type === '收入' && message.includes('报销')) {
+                    if (message.includes('交通') || message.includes('打车')) {
+                        return '交通';
+                    } else if (message.includes('餐饮') || message.includes('饭')) {
+                        return '餐饮';
+                    } else if (message.includes('差旅') || message.includes('出差')) {
+                        return '交通';
+                    }
+                }
+                
+                // 退款场景的分类
+                if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
+                    if (message.includes('购物') || message.includes('买')) {
+                        return '购物';
+                    } else if (message.includes('机票') || message.includes('车票') || message.includes('交通')) {
+                        return '交通';
+                    } else if (message.includes('酒店') || message.includes('住宿')) {
+                        return '住房';
+                    }
+                }
+                
+                // 如果是收入，先检查是否是亲属赠予
+                if (type === '收入') {
+                    for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+                        if (category === '亲属赠予') {
+                            for (const keyword of keywords) {
+                                if (message.includes(keyword)) {
+                                    return category;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 检查其他收入分类
+                    if (message.includes('工资') || message.includes('薪水') || message.includes('薪资')) {
+                        return '工资收入';
+                    } else if (message.includes('奖金') || message.includes('奖励')) {
+                        return '奖金';
+                    } else if (message.includes('红包')) {
+                        return '红包';
+                    } else if (message.includes('报销')) {
+                        return '报销';
+                    } else if (message.includes('退款')) {
+                        return '退款';
+                    } else if (message.includes('兼职') || message.includes('劳务费') || message.includes('稿费')) {
+                        return '兼职收入';
+                    } else {
+                        return '其他收入';
+                    }
+                }
+                
+                // 如果是支出，检查各类支出分类
+                for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+                    if (category === '其他' || category === '亲属赠予') continue;
+                    
                     for (const keyword of keywords) {
                         if (message.includes(keyword)) {
                             return category;
                         }
                     }
                 }
+                
+                // 默认分类
+                return '其他';
             }
             
-            // 检查其他收入分类
-            if (message.includes('工资') || message.includes('薪水') || message.includes('薪资')) {
-                return '工资收入';
-            } else if (message.includes('奖金') || message.includes('奖励')) {
-                return '奖金';
-            } else if (message.includes('红包')) {
-                return '红包';
-            } else if (message.includes('报销')) {
-                return '报销';
-            } else if (message.includes('退款')) {
-                return '退款';
-            } else if (message.includes('兼职') || message.includes('劳务费') || message.includes('稿费')) {
-                return '兼职收入';
-            } else {
-                return '其他收入';
+            // 计算实际金额（考虑分摊情况）
+            calculateActualAmount(originalAmount, message) {
+                if (!originalAmount) return originalAmount;
+                
+                // 检查是否有分摊情况
+                for (const { regex, multiplier } of this.splitKeywords) {
+                    const match = message.match(regex);
+                    if (match) {
+                        const actualAmount = originalAmount * multiplier(match);
+                        return Math.round(actualAmount * 100) / 100; // 保留两位小数
+                    }
+                }
+                
+                return originalAmount;
+            }
+            
+            // 生成备注
+            generateNote(message, type, originalAmount, actualAmount, category) {
+                let note = '';
+                
+                // 处理AA返还场景
+                if (type === '收入' && message.includes('AA')) {
+                    if (message.includes('打车')) {
+                        note = '同事返还打车AA费用';
+                    } else if (message.includes('吃饭') || message.includes('餐')) {
+                        note = '同事返还餐饮AA费用';
+                    } else if (message.includes('购物') || message.includes('买')) {
+                        note = '同事返还购物AA费用';
+                    } else {
+                        note = '同事返还AA费用';
+                    }
+                    return note;
+                }
+                
+                // 处理报销场景
+                if (type === '收入' && message.includes('报销')) {
+                    if (message.includes('交通') || message.includes('打车')) {
+                        note = '交通费用报销';
+                    } else if (message.includes('餐饮') || message.includes('饭')) {
+                        note = '餐饮费用报销';
+                    } else {
+                        note = '费用报销';
+                    }
+                    return note;
+                }
+                
+                // 处理退款场景
+                if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
+                    if (message.includes('购物') || message.includes('买')) {
+                        note = '购物退款';
+                    } else if (message.includes('机票') || message.includes('车票')) {
+                        note = '票务退款';
+                    } else {
+                        note = '退款';
+                    }
+                    return note;
+                }
+                
+                // 基础备注
+                if (type === '支出') {
+                    note = `${category}支出`;
+                } else {
+                    note = `${category}`;
+                }
+                
+                // 添加分摊信息
+                if (originalAmount !== actualAmount) {
+                    const peopleCount = Math.round(originalAmount / actualAmount);
+                    if (message.includes('AA') || message.includes('aa')) {
+                        note = `${category}AA，${peopleCount}人分摊，总花费${originalAmount}元，个人支出${actualAmount}元`;
+                    } else if (message.includes('分摊')) {
+                        note = `${category}分摊，${peopleCount}人分摊，总花费${originalAmount}元，个人支出${actualAmount}元`;
+                    } else if (message.includes('拼单')) {
+                        note = `${category}拼单，${peopleCount}人拼单，总花费${originalAmount}元，个人支出${actualAmount}元`;
+                    } else if (message.includes('均摊')) {
+                        note = `${category}均摊，${peopleCount}人均摊，总花费${originalAmount}元，个人支出${actualAmount}元`;
+                    } else {
+                        note = `${category}，${peopleCount}人分摊，总花费${originalAmount}元，个人支出${actualAmount}元`;
+                    }
+                } else {
+                    // 添加具体场景描述
+                    if (type === '收入') {
+                        if (category === '亲属赠予') {
+                            // 提取亲属关系
+                            for (const keyword of this.categoryKeywords['亲属赠予']) {
+                                if (message.includes(keyword)) {
+                                    note = `${keyword}给的钱`;
+                                    break;
+                                }
+                            }
+                        } else if (message.includes('工资') || message.includes('薪水')) {
+                            note = '工资收入';
+                        } else if (message.includes('奖金')) {
+                            note = '奖金收入';
+                        } else if (message.includes('红包')) {
+                            note = '红包收入';
+                        }
+                    } else {
+                        // 提取支出场景
+                        if (message.includes('买') || message.includes('购')) {
+                            note = `购买${category}`;
+                        } else if (message.includes('吃') || message.includes('餐') || message.includes('饭')) {
+                            note = `餐饮消费`;
+                        } else if (message.includes('交通') || message.includes('打车') || message.includes('公交') || message.includes('地铁')) {
+                            note = `交通出行`;
+                        } else if (message.includes('转给') || message.includes('汇给') || message.includes('打给')) {
+                            // 提取转账对象
+                            if (message.includes('同事')) {
+                                note = `转账给同事`;
+                            } else if (message.includes('朋友')) {
+                                note = `转账给朋友`;
+                            } else if (message.includes('家人') || message.includes('父母') || message.includes('妈妈') || message.includes('爸爸')) {
+                                note = `转账给家人`;
+                            } else {
+                                note = `转账支出`;
+                            }
+                        }
+                    }
+                }
+                
+                return note;
+            }
+            
+            // 解析消息
+            parse(message) {
+                // 检查是否有金额
+                const originalAmount = this.extractAmount(message);
+                if (originalAmount === null || isNaN(originalAmount) || originalAmount <= 0) {
+                    return { "need_more_info": "请补充关键信息（如金额/收支场景）" };
+                }
+                
+                // 确定收支类型
+                const type = this.determineType(message);
+                
+                // 确定分类
+                const category = this.determineCategory(message, type);
+                
+                // 计算实际金额
+                const actualAmount = this.calculateActualAmount(originalAmount, message);
+                
+                // 生成备注
+                const note = this.generateNote(message, type, originalAmount, actualAmount, category);
+                
+                // 返回解析结果
+                return {
+                    "type": type,
+                    "actual_amount": actualAmount,
+                    "original_amount": originalAmount,
+                    "category": category,
+                    "note": note
+                };
             }
         }
         
-        // 如果是支出，检查各类支出分类
-        for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
-            if (category === '其他' || category === '亲属赠予') continue;
+        // 创建解析器实例
+        const expenseParser = new ExpenseParser();
+        
+        // 模拟AI解析消息
+        async function parseMessageWithAI(message) {
+            try {
+                // 模拟API调用延迟
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 使用专业解析器解析消息
+                const result = expenseParser.parse(message);
+                
+                // 输出日志，模拟AI解析结果
+                console.log('AI解析结果:', result);
+                
+                // 如果需要更多信息
+                if (result.need_more_info) {
+                    return null;
+                }
+                
+                // 转换为应用内部格式
+                let type = result.type === '收入' ? 'income' : 'expense';
+                let category = result.category;
+                
+                // 映射分类到应用内部分类ID
+                const categoryMap = {
+                    '餐饮': 'food',
+                    '交通': 'transport',
+                    '购物': 'shopping',
+                    '娱乐': 'entertainment',
+                    '医疗': 'healthcare',
+                    '水电': 'utilities',
+                    '住房': 'housing',
+                    '教育': 'education',
+                    '亲属赠予': 'income',
+                    '工资收入': 'income',
+                    '奖金': 'income',
+                    '红包': 'income',
+                    '报销': 'income',
+                    '退款': 'income',
+                    '兼职收入': 'income',
+                    '其他收入': 'income',
+                    '其他': 'other'
+                };
+                
+                // 确定日期
+                let date = new Date();
+                
+                // 检查是否包含具体的年月日格式 (如：2024年1月1日、2024-1-1、2024/1/1)
+                const datePatterns = [
+                    /(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})[日号]?/,  // 2024年1月1日、2024-1-1、2024/1/1
+                    /(\d{1,2})[月\-\/](\d{1,2})[日号]?[年\-\/]?(\d{4})?/  // 1月1日2024年、1-1-2024、1/1/2024
+                ];
+                
+                let dateMatched = false;
+                for (const pattern of datePatterns) {
+                    const match = message.match(pattern);
+                    if (match) {
+                        let year, month, day;
+                        if (match[3]) {
+                            // 格式：年-月-日 或 月-日-年
+                            if (parseInt(match[1]) > 1000) {
+                                // 年-月-日格式
+                                year = parseInt(match[1]);
+                                month = parseInt(match[2]) - 1;
+                                day = parseInt(match[3]);
+                            } else {
+                                // 月-日-年格式
+                                year = match[3] ? parseInt(match[3]) : new Date().getFullYear();
+                                month = parseInt(match[1]) - 1;
+                                day = parseInt(match[2]);
+                            }
+                        } else {
+                            // 格式：月-日
+                            year = new Date().getFullYear();
+                            month = parseInt(match[1]) - 1;
+                            day = parseInt(match[2]);
+                        }
+                        
+                        // 验证日期有效性
+                        const testDate = new Date(year, month, day);
+                        if (testDate.getFullYear() === year && testDate.getMonth() === month && testDate.getDate() === day) {
+                            date = testDate;
+                            dateMatched = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // 如果没有匹配到具体日期，检查相对日期
+                if (!dateMatched) {
+                    if (message.includes('昨天') || message.includes('昨日')) {
+                        date.setDate(date.getDate() - 1);
+                    } else if (message.includes('前天')) {
+                        date.setDate(date.getDate() - 2);
+                    } else if (message.includes('今天') || message.includes('今日')) {
+                        // 今天，保持当前日期
+                    } else if (message.includes('明天') || message.includes('明日')) {
+                        date.setDate(date.getDate() + 1);
+                    } else if (message.includes('后天')) {
+                        date.setDate(date.getDate() + 2);
+                    }
+                }
+                
+                return {
+                    amount: result.actual_amount,
+                    type: type,
+                    date: date,
+                    category: categoryMap[category] || 'other',
+                    description: result.note
+                };
+            } catch (error) {
+                console.error('AI解析失败:', error);
+                
+                // 如果AI解析失败，回退到本地解析器
+                console.log('回退到本地解析器');
+                return parseMessageLocally(message);
+            }
+        }
+
+        // 本地解析器（当AI API不可用时的回退方案）
+        function parseMessageLocally(message) {
+            // 尝试提取金额
+            const amountMatch = message.match(/(\d+\.?\d*)/);
+            if (!amountMatch) return null;
             
-            for (const keyword of keywords) {
+            const amount = parseFloat(amountMatch[1]);
+            if (isNaN(amount) || amount <= 0) return null;
+            
+            // 确定类型（收入或支出）
+            let type = 'expense'; // 默认是支出
+            const incomeKeywords = ['收入', '工资', '奖金', '红包', '转账', '兼职', '赚', '到账'];
+            for (const keyword of incomeKeywords) {
                 if (message.includes(keyword)) {
-                    return category;
+                    type = 'income';
+                    break;
                 }
             }
-        }
-        
-        // 默认分类
-        return '其他';
-    }
-    
-    // 生成备注
-    generateNote(message, type, originalAmount, category) {
-        let note = '';
-        
-        // 处理AA返还场景
-        if (type === '收入' && message.includes('AA')) {
-            if (message.includes('打车')) {
-                note = '同事返还打车AA费用';
-            } else if (message.includes('吃饭') || message.includes('餐')) {
-                note = '同事返还餐饮AA费用';
-            } else if (message.includes('购物') || message.includes('买')) {
-                note = '同事返还购物AA费用';
-            } else {
-                note = '同事返还AA费用';
+            
+            // 确定日期
+            let date = new Date();
+            const todayKeywords = ['今天', '今日', '现在'];
+            const yesterdayKeywords = ['昨天', '昨日'];
+            
+            // 检查是否包含今天
+            for (const keyword of todayKeywords) {
+                if (message.includes(keyword)) {
+                    date = new Date();
+                    break;
+                }
             }
-            return note;
-        }
-        
-        // 处理报销场景
-        if (type === '收入' && message.includes('报销')) {
-            if (message.includes('交通') || message.includes('打车')) {
-                note = '交通费用报销';
-            } else if (message.includes('餐饮') || message.includes('饭')) {
-                note = '餐饮费用报销';
-            } else {
-                note = '费用报销';
+            
+            // 检查是否包含昨天
+            for (const keyword of yesterdayKeywords) {
+                if (message.includes(keyword)) {
+                    date = new Date();
+                    date.setDate(date.getDate() - 1);
+                    break;
+                }
             }
-            return note;
-        }
-        
-        // 处理退款场景
-        if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
-            if (message.includes('购物') || message.includes('买')) {
-                note = '购物退款';
-            } else if (message.includes('机票') || message.includes('车票')) {
-                note = '票务退款';
-            } else {
-                note = '退款';
-            }
-            return note;
-        }
-        
-        // 基础备注
-        if (type === '支出') {
-            note = `${category}支出`;
-        } else {
-            note = `${category}`;
-        }
-        
-        // 添加具体场景描述
-        if (type === '收入') {
-            if (category === '亲属赠予') {
-                // 提取亲属关系
-                for (const keyword of this.categoryKeywords['亲属赠予']) {
+            
+            // 确定分类
+            let category = 'other'; // 默认是其他
+            
+            // 根据关键词确定分类
+            const categoryKeywords = {
+                food: ['吃', '饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅'],
+                transport: ['车', '打车', '公交', '地铁', '出租', '滴滴', '加油', '停车', '高铁', '飞机'],
+                shopping: ['买', '购', '衣服', '鞋', '包', '化妆品', '电子产品'],
+                entertainment: ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票'],
+                healthcare: ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术'],
+                utilities: ['电', '水', '燃气', '网', '话费', '宽带', '物业'],
+                housing: ['房', '租', '贷', '公寓', '宿舍', '装修'],
+                education: ['学', '书', '课程', '培训', '学费', '辅导', '考试']
+            };
+            
+            for (const [catId, keywords] of Object.entries(categoryKeywords)) {
+                for (const keyword of keywords) {
                     if (message.includes(keyword)) {
-                        note = `${keyword}给的钱`;
+                        category = catId;
                         break;
                     }
                 }
-            } else if (message.includes('工资') || message.includes('薪水')) {
-                note = '工资收入';
-            } else if (message.includes('奖金')) {
-                note = '奖金收入';
-            } else if (message.includes('红包')) {
-                note = '红包收入';
+                if (category !== 'other') break;
             }
-        } else {
-            // 提取支出场景
-            if (message.includes('买') || message.includes('购')) {
-                note = `购买${category}`;
-            } else if (message.includes('吃') || message.includes('餐') || message.includes('饭')) {
-                note = `餐饮消费`;
-            } else if (message.includes('交通') || message.includes('打车') || message.includes('公交') || message.includes('地铁')) {
-                note = `交通出行`;
-            } else if (message.includes('转给') || message.includes('汇给') || message.includes('打给')) {
-                // 提取转账对象
-                if (message.includes('同事')) {
-                    note = `转账给同事`;
-                } else if (message.includes('朋友')) {
-                    note = `转账给朋友`;
-                } else if (message.includes('家人') || message.includes('父母') || message.includes('妈妈') || message.includes('爸爸')) {
-                    note = `转账给家人`;
-                } else {
-                    note = `转账支出`;
+            
+            // 如果是收入，分类为income
+            if (type === 'income') {
+                category = 'income';
+            }
+            
+            // 提取描述
+            let description = message;
+            
+            return {
+                amount,
+                type,
+                date,
+                category,
+                description
+            };
+        }
+
+        // 处理用户消息
+        async function processMessage(message) {
+            // 添加AI正在输入的动画
+            addTypingIndicator();
+            
+            try {
+                // 调用AI解析消息
+                const parsedData = await parseMessageWithAI(message);
+                
+                // 移除输入动画
+                removeTypingIndicator();
+                
+                if (!parsedData) {
+                    // 无法解析消息
+                    addMessage('抱歉，我没有理解你的意思。请尝试使用更明确的表述，例如"今天买午餐花了25元"或"昨天工资到账5000元"。', 'ai');
+                    return;
                 }
+                
+                // 创建记录
+                const record = createRecord(parsedData);
+                
+                // 保存记录
+                saveRecord(record);
+                
+                // 添加AI回复
+                const category = AppState.categories.find(c => c.id === record.category) || AppState.categories[AppState.categories.length - 1];
+                const dateStr = formatDate(record.date);
+                const typeStr = record.type === 'expense' ? '支出' : '收入';
+                
+                // 生成AI回复
+                let response = `已记录：${dateStr}的${category.name}${typeStr} ${record.amount.toFixed(2)}元。`;
+                
+                // 根据不同情况添加额外回复
+                if (record.type === 'income' && record.amount > 1000) {
+                    response += `\n\n🎉 不错的一笔收入呢！继续保持良好的财务状况。`;
+                } else if (record.type === 'expense' && record.amount > 500) {
+                    response += `\n\n💡 这是一笔较大的支出，记得合理规划预算哦。`;
+                }
+                
+                addMessageWithRecord(response, record);
+                
+                // 更新当前视图
+                if (AppState.currentView !== 'chat') {
+                    renderView(AppState.currentView);
+                }
+                
+            } catch (error) {
+                console.error('处理消息失败:', error);
+                removeTypingIndicator();
+                addMessage('抱歉，处理你的请求时出现了错误。请稍后再试。', 'ai');
             }
         }
         
-        return note;
-    }
-    
-    // 解析消息
-    parse(message) {
-        console.log(`\n=== 测试输入: "${message}" ===`);
-        
-        // 检查是否有金额
-        const originalAmount = this.extractAmount(message);
-        if (originalAmount === null || isNaN(originalAmount) || originalAmount <= 0) {
-            console.log('结果: {"need_more_info":"请补充关键信息（如金额/收支场景）"}');
-            return { "need_more_info": "请补充关键信息（如金额/收支场景）" };
+        // 显示编辑界面
+        function showEditInterface(originalMessage, record) {
+            const editContainer = document.createElement('div');
+            editContainer.className = 'flex items-start mb-4 animate-fade-in';
+            editContainer.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
+                    <i class="fa fa-robot"></i>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 max-w-[80%] w-full">
+                    <p class="text-gray-800 mb-3">我识别到以下信息，确认或修改后保存：</p>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                                <select id="edit-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="expense" ${record.type === 'expense' ? 'selected' : ''}>支出</option>
+                                    <option value="income" ${record.type === 'income' ? 'selected' : ''}>收入</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">金额 (元)</label>
+                                <input type="number" id="edit-amount" value="${record.amount}" step="0.01" min="0" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                                <select id="edit-category" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                    ${AppState.categories.map(cat => 
+                                        `<option value="${cat.id}" ${record.category === cat.id ? 'selected' : ''}>${cat.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                            <input type="date" id="edit-date" value="${formatDateForInput(record.date)}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                            <input type="text" id="edit-description" value="${record.description}" placeholder="添加备注信息..." class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="btn-save-edit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-colors flex-1">
+                            <i class="fa fa-check mr-1"></i> 确认保存
+                        </button>
+                        <button id="btn-cancel-edit" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-times mr-1"></i> 取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            elements.chatMessages.appendChild(editContainer);
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+            
+            // 绑定编辑事件
+            document.getElementById('btn-save-edit').addEventListener('click', () => {
+                const updatedRecord = {
+                    ...record,
+                    type: document.getElementById('edit-type').value,
+                    amount: parseFloat(document.getElementById('edit-amount').value) || 0,
+                    category: document.getElementById('edit-category').value,
+                    date: new Date(document.getElementById('edit-date').value),
+                    description: document.getElementById('edit-description').value || originalMessage,
+                    isEditable: false
+                };
+                
+                // 保存更新后的记录
+                saveRecord(updatedRecord);
+                
+                // 移除编辑界面
+                elements.chatMessages.removeChild(editContainer);
+                
+                // 显示确认消息
+                const category = AppState.categories.find(c => c.id === updatedRecord.category) || AppState.categories[AppState.categories.length - 1];
+                const dateStr = formatDate(updatedRecord.date);
+                const typeStr = updatedRecord.type === 'expense' ? '支出' : '收入';
+                
+                let response = `已记录：${dateStr}的${category.name}${typeStr} ${updatedRecord.amount.toFixed(2)}元。`;
+                
+                if (updatedRecord.type === 'income' && updatedRecord.amount > 1000) {
+                    response += `\n\n🎉 不错的一笔收入呢！继续保持良好的财务状况。`;
+                } else if (updatedRecord.type === 'expense' && updatedRecord.amount > 500) {
+                    response += `\n\n💡 这是一笔较大的支出，记得合理规划预算哦。`;
+                }
+                
+                addMessageWithRecord(response, updatedRecord);
+                
+                // 更新当前视图
+                if (AppState.currentView !== 'chat') {
+                    renderView(AppState.currentView);
+                }
+            });
+            
+            document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+                elements.chatMessages.removeChild(editContainer);
+                addMessage('已取消记账操作。', 'ai');
+            });
         }
         
-        console.log(`提取金额: ${originalAmount}`);
+        // 格式化日期为input date格式
+        function formatDateForInput(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
         
-        // 确定收支类型
-        const type = this.determineType(message);
-        console.log(`判定类型: ${type}`);
+        // 编辑已存在的记录
+        function editExistingRecord(recordId) {
+            // 查找记录
+            const recordIndex = AppState.records.findIndex(r => r.id === recordId);
+            if (recordIndex === -1) return;
+            
+            const record = AppState.records[recordIndex];
+            const uniqueId = `edit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            // 创建编辑界面
+            const editContainer = document.createElement('div');
+            editContainer.className = 'flex items-start mb-4 animate-fade-in';
+            editContainer.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white mr-3 flex-shrink-0">
+                    <i class="fa fa-robot"></i>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-4 max-w-[80%] w-full">
+                    <p class="text-gray-800 mb-3">编辑记账记录：</p>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 mb-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                                <select id="${uniqueId}-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="expense" ${record.type === 'expense' ? 'selected' : ''}>支出</option>
+                                    <option value="income" ${record.type === 'income' ? 'selected' : ''}>收入</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">金额 (元)</label>
+                                <input type="number" id="${uniqueId}-amount" value="${record.amount}" step="0.01" min="0" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                                <select id="${uniqueId}-category" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                    ${AppState.categories.map(cat => 
+                                        `<option value="${cat.id}" ${record.category === cat.id ? 'selected' : ''}>${cat.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                            <input type="date" id="${uniqueId}-date" value="${formatDateForInput(record.date)}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                            <input type="text" id="${uniqueId}-description" value="${record.description}" placeholder="添加备注信息..." class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="${uniqueId}-save" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-colors flex-1">
+                            <i class="fa fa-check mr-1"></i> 保存修改
+                        </button>
+                        <button id="${uniqueId}-delete" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                            <i class="fa fa-trash mr-1"></i> 删除
+                        </button>
+                        <button id="${uniqueId}-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                            <i class="fa fa-times mr-1"></i> 取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            elements.chatMessages.appendChild(editContainer);
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+            
+            // 绑定编辑事件
+            const saveBtn = document.getElementById(`${uniqueId}-save`);
+            const deleteBtn = document.getElementById(`${uniqueId}-delete`);
+            const cancelBtn = document.getElementById(`${uniqueId}-cancel`);
+            
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    try {
+                        // 获取表单元素
+                        const typeElement = document.getElementById(`${uniqueId}-type`);
+                        const amountElement = document.getElementById(`${uniqueId}-amount`);
+                        const categoryElement = document.getElementById(`${uniqueId}-category`);
+                        const dateElement = document.getElementById(`${uniqueId}-date`);
+                        const descriptionElement = document.getElementById(`${uniqueId}-description`);
+                        
+                        // 检查元素是否存在
+                        if (!typeElement || !amountElement || !categoryElement || !dateElement || !descriptionElement) {
+                            throw new Error('找不到表单元素');
+                        }
+                        
+                        // 获取并验证值
+                        const type = typeElement.value;
+                        const amountValue = amountElement.value;
+                        const category = categoryElement.value;
+                        const dateValue = dateElement.value;
+                        const description = descriptionElement.value || record.description;
+                        
+                        if (!dateValue) {
+                            throw new Error('日期不能为空');
+                        }
+                        
+                        const amount = parseFloat(amountValue);
+                        if (isNaN(amount) || amount < 0) {
+                            throw new Error('请输入有效的金额');
+                        }
+                        
+                        const date = new Date(dateValue);
+                        if (isNaN(date.getTime())) {
+                            throw new Error('请输入有效的日期');
+                        }
+                        
+                        const updatedRecord = {
+                            ...record,
+                            type: type,
+                            amount: amount,
+                            category: category,
+                            date: date,
+                            description: description,
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        console.log('更新记录:', updatedRecord);
+                        
+                        // 更新记录
+                        AppState.records[recordIndex] = updatedRecord;
+                        saveRecords();
+                        
+                        // 移除编辑界面和旧的记录卡片
+                        if (elements.chatMessages.contains(editContainer)) {
+                            elements.chatMessages.removeChild(editContainer);
+                        }
+                        
+                        // 查找并移除旧的记录卡片
+                        const oldRecordCards = elements.chatMessages.querySelectorAll(`[data-record-id="${recordId}"]`);
+                        oldRecordCards.forEach(card => {
+                            const recordCard = card.closest('.flex.items-start.mb-4');
+                            if (recordCard && elements.chatMessages.contains(recordCard)) {
+                                elements.chatMessages.removeChild(recordCard);
+                            }
+                        });
+                        
+                        // 显示确认消息
+                        const categoryObj = AppState.categories.find(c => c.id === updatedRecord.category);
+                        if (!categoryObj) {
+                            throw new Error('找不到分类信息');
+                        }
+                        
+                        const dateStr = formatDate(updatedRecord.date);
+                        const typeStr = updatedRecord.type === 'expense' ? '支出' : '收入';
+                        
+                        const response = `已更新记录：${dateStr}的${categoryObj.name}${typeStr} ${updatedRecord.amount.toFixed(2)}元。`;
+                        addMessageWithRecord(response, updatedRecord);
+                        
+                        // 重新渲染当前视图
+                        if (AppState.currentView !== 'chat') {
+                            renderView(AppState.currentView);
+                        }
+                    } catch (error) {
+                        console.error('保存修改失败:', error);
+                        addMessage(`保存修改时出现错误: ${error.message}，请重试。`, 'ai');
+                    }
+                });
+            }
+            
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('确定要删除这条记录吗？')) {
+                        try {
+                            // 删除记录
+                            AppState.records.splice(recordIndex, 1);
+                            saveRecords();
+                            
+                            // 移除编辑界面
+                            elements.chatMessages.removeChild(editContainer);
+                            
+                            // 显示确认消息
+                            addMessage('已删除记账记录。', 'ai');
+                            
+                            // 重新渲染当前视图
+                            if (AppState.currentView !== 'chat') {
+                                renderView(AppState.currentView);
+                            }
+                        } catch (error) {
+                            console.error('删除记录失败:', error);
+                            addMessage('删除记录时出现错误，请重试。', 'ai');
+                        }
+                    }
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    elements.chatMessages.removeChild(editContainer);
+                });
+            }
+        }
+
+        // AI消息解析器
+        class AIParser {
+            constructor() {
+                // 增强的关键词库
+                this.keywords = {
+                    // 收入关键词
+                    income: ['收入', '工资', '薪水', '薪资', '奖金', '红包', '转账', '兼职', '赚', '到账', '入账', '进账', '回款', '稿费', '劳务费', '补贴', '报销', '退款'],
+                    
+                    // 支出关键词
+                    expense: ['花', '消费', '支出', '买', '购', '支付', '付', '花费', '开销', '费用', '成本', '价格', '价值', '需要', '用了', '用掉', '花掉', '花了', '消费了', '支出了', '支付了', '付了'],
+                    
+                    // 日期关键词
+                    date: {
+                        today: ['今天', '今日', '现在', '今早', '今晚', '今天早上', '今天下午', '今天晚上'],
+                        yesterday: ['昨天', '昨日', '昨天早上', '昨天下午', '昨天晚上', '昨日上午', '昨日下午', '昨日晚上'],
+                        daysAgo: ['前天', '大前天', '三前天'],
+                        tomorrow: ['明天', '明日', '明早', '明晚'],
+                        week: ['周一', '周二', '周三', '周四', '周五', '周六', '周日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'],
+                        month: ['本月', '上月', '上月初', '上月末', '本月初', '本月末', '月初', '月末']
+                    },
+                    
+                    // 金额关键词
+                    amount: ['元', '块', '块钱', '人民币', '￥', '$', '美元', '美金', '欧元', '英镑']
+                };
+                
+                // 分类关键词权重
+                this.categoryWeights = {
+                    food: {
+                        keywords: ['吃', '饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅', '饭店', '食堂', '早餐', '午餐', '晚餐', '夜宵', '零食', '水果', '蔬菜', '肉', '鱼', '米', '面', '油', '盐', '酱', '醋', '茶', '酒', '饮料', '水', '牛奶', '面包', '蛋糕', '饼干', '巧克力', '糖', '冰淇淋', '火锅', '烧烤', '西餐', '日料', '韩料', '快餐', '小吃'],
+                        weight: 1.0
+                    },
+                    transport: {
+                        keywords: ['车', '打车', '滴滴', '优步', '公交', '地铁', '出租', '地铁卡', '公交卡', '加油', '汽油', '柴油', '停车', '停车费', '过路费', '高速费', '高铁', '火车', '飞机', '机票', '火车票', '高铁票', '船票', '轮渡', '打车费', '交通费'],
+                        weight: 1.0
+                    },
+                    shopping: {
+                        keywords: ['买', '购', '衣服', '鞋', '包', '化妆品', '护肤品', '电子产品', '手机', '电脑', '平板', '耳机', '手表', '首饰', '项链', '戒指', '耳环', '眼镜', '帽子', '围巾', '手套', '裤子', '裙子', '上衣', '外套', '内衣', '袜子', '领带', '皮带', '钱包', '行李箱', '雨伞', '太阳伞'],
+                        weight: 1.0
+                    },
+                    entertainment: {
+                        keywords: ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票', '游乐园', '演唱会', '音乐会', '话剧', '歌剧', '舞剧', '相声', '小品', '魔术', '杂技', '马戏团', 'KTV', '酒吧', '夜店', '桌游', '密室逃脱', '剧本杀', '电影院', '游戏厅', '游乐园', '主题公园', '旅游景点', '景区', '门票钱'],
+                        weight: 1.0
+                    },
+                    healthcare: {
+                        keywords: ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术', '药品', '处方药', '非处方药', '中药', '西药', '草药', '针剂', '输液', '打针', '疫苗', '体检', '验血', '验尿', 'CT', '核磁共振', 'B超', 'X光', '心电图', '脑电图', '血压', '血糖', '体温计', '创可贴', '消毒液', '纱布', '药棉'],
+                        weight: 1.0
+                    },
+                    utilities: {
+                        keywords: ['电', '水', '燃气', '网', '话费', '宽带', '物业', '电费', '水费', '燃气费', '网费', '电话费', '手机费', '物业费', '供暖费', '取暖费', '冷气费', '空调费', '有线电视费', '收视费', '垃圾费', '卫生费'],
+                        weight: 1.0
+                    },
+                    housing: {
+                        keywords: ['房', '租', '贷', '公寓', '宿舍', '装修', '房租', '房贷', '房租费', '房贷月供', '装修费', '家具', '家电', '沙发', '床', '桌子', '椅子', '柜子', '冰箱', '洗衣机', '电视', '空调', '热水器', '油烟机', '燃气灶', '微波炉', '烤箱', '电饭煲', '电磁炉', '电压力锅', '吸尘器', '扫地机器人', '拖把', '扫帚', '簸箕', '垃圾桶'],
+                        weight: 1.0
+                    },
+                    education: {
+                        keywords: ['学', '书', '课程', '培训', '学费', '辅导', '考试', '学校', '大学', '中学', '小学', '幼儿园', '托儿所', '辅导班', '培训班', '补习班', '兴趣班', '特长班', '家教', '私教', '教材', '教科书', '课外书', '练习册', '作业本', '笔记本', '铅笔', '钢笔', '圆珠笔', '水彩笔', '蜡笔', '橡皮', '尺子', '圆规', '计算器', '书包', '文具盒'],
+                        weight: 1.0
+                    }
+                };
+            }
+            
+            // 提取金额
+            extractAmount(message) {
+                // 匹配数字+金额单位的模式
+                const amountPatterns = [
+                    /(\d+\.?\d*)\s*([元块]|块钱|人民币|￥)/g,
+                    /([$￥])\s*(\d+\.?\d*)/g,
+                    /(\d+\.?\d*)\s*([$￥])/g,
+                    /(\d+\.?\d*)\s*(美元|美金|欧元|英镑)/g
+                ];
+                
+                let amount = null;
+                let currency = 'CNY'; // 默认人民币
+                
+                for (const pattern of amountPatterns) {
+                    const match = pattern.exec(message);
+                    if (match) {
+                        if (match[1] === '$' || match[1] === '￥') {
+                            amount = parseFloat(match[2]);
+                            currency = match[1] === '$' ? 'USD' : 'CNY';
+                        } else if (match[2] === '$' || match[2] === '￥') {
+                            amount = parseFloat(match[1]);
+                            currency = match[2] === '$' ? 'USD' : 'CNY';
+                        } else if (match[2] === '美元' || match[2] === '美金') {
+                            amount = parseFloat(match[1]);
+                            currency = 'USD';
+                        } else if (match[2] === '欧元') {
+                            amount = parseFloat(match[1]);
+                            currency = 'EUR';
+                        } else if (match[2] === '英镑') {
+                            amount = parseFloat(match[1]);
+                            currency = 'GBP';
+                        } else {
+                            amount = parseFloat(match[1]);
+                            currency = 'CNY';
+                        }
+                        break;
+                    }
+                }
+                
+                // 如果没有找到带单位的金额，尝试找纯数字
+                if (amount === null) {
+                    const numMatch = message.match(/(\d+\.?\d*)/);
+                    if (numMatch) {
+                        amount = parseFloat(numMatch[1]);
+                        currency = 'CNY';
+                    }
+                }
+                
+                // 货币转换（简化版，实际应用中可能需要实时汇率）
+                if (amount !== null && currency !== 'CNY') {
+                    const rates = {
+                        'USD': 7.0, // 假设1美元=7人民币
+                        'EUR': 8.0, // 假设1欧元=8人民币
+                        'GBP': 9.0  // 假设1英镑=9人民币
+                    };
+                    amount *= rates[currency] || 1;
+                }
+                
+                return amount;
+            }
+            
+            // 确定收支类型
+            determineType(message) {
+                // 收入关键词匹配
+                for (const keyword of this.keywords.income) {
+                    if (message.includes(keyword)) {
+                        return 'income';
+                    }
+                }
+                
+                // 支出关键词匹配
+                for (const keyword of this.keywords.expense) {
+                    if (message.includes(keyword)) {
+                        return 'expense';
+                    }
+                }
+                
+                // 默认是支出
+                return 'expense';
+            }
+            
+            // 确定日期
+            determineDate(message) {
+                const today = new Date();
+                let date = new Date(today);
+                
+                // 今天
+                for (const keyword of this.keywords.date.today) {
+                    if (message.includes(keyword)) {
+                        return today;
+                    }
+                }
+                
+                // 昨天
+                for (const keyword of this.keywords.date.yesterday) {
+                    if (message.includes(keyword)) {
+                        date.setDate(today.getDate() - 1);
+                        return date;
+                    }
+                }
+                
+                // 前天
+                if (message.includes('前天')) {
+                    date.setDate(today.getDate() - 2);
+                    return date;
+                }
+                
+                // 大前天
+                if (message.includes('大前天')) {
+                    date.setDate(today.getDate() - 3);
+                    return date;
+                }
+                
+                // 三前天
+                if (message.includes('三前天')) {
+                    date.setDate(today.getDate() - 4);
+                    return date;
+                }
+                
+                // 明天
+                for (const keyword of this.keywords.date.tomorrow) {
+                    if (message.includes(keyword)) {
+                        date.setDate(today.getDate() + 1);
+                        return date;
+                    }
+                }
+                
+                // 本周几
+                const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                const weekDaysFull = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                
+                for (let i = 0; i < weekDays.length; i++) {
+                    if (message.includes(weekDays[i])) {
+                        const todayDay = today.getDay();
+                        const diff = i - todayDay;
+                        date.setDate(today.getDate() + diff);
+                        return date;
+                    }
+                }
+                
+                for (let i = 0; i < weekDaysFull.length; i++) {
+                    if (message.includes(weekDaysFull[i])) {
+                        const todayDay = today.getDay();
+                        const diff = i - todayDay;
+                        date.setDate(today.getDate() + diff);
+                        return date;
+                    }
+                }
+                
+                // 本月初
+                if (message.includes('本月初') || message.includes('月初')) {
+                    date.setDate(1);
+                    return date;
+                }
+                
+                // 本月末
+                if (message.includes('本月末') || message.includes('月末')) {
+                    date.setMonth(date.getMonth() + 1);
+                    date.setDate(0);
+                    return date;
+                }
+                
+                // 上月初
+                if (message.includes('上月初')) {
+                    date.setMonth(date.getMonth() - 1);
+                    date.setDate(1);
+                    return date;
+                }
+                
+                // 上月末
+                if (message.includes('上月末')) {
+                    date.setDate(0);
+                    return date;
+                }
+                
+                // 上月
+                if (message.includes('上月')) {
+                    date.setMonth(date.getMonth() - 1);
+                    return date;
+                }
+                
+                // 本月
+                if (message.includes('本月')) {
+                    return date;
+                }
+                
+                // 具体日期（如：7月21日）
+                const dateMatch = message.match(/(\d+)月(\d+)日?/);
+                if (dateMatch) {
+                    const month = parseInt(dateMatch[1]) - 1;
+                    const day = parseInt(dateMatch[2]);
+                    date = new Date(today.getFullYear(), month, day);
+                    return date;
+                }
+                
+                // 具体日期（如：2025-07-21）
+                const dateMatch2 = message.match(/(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})日?/);
+                if (dateMatch2) {
+                    const year = parseInt(dateMatch2[1]);
+                    const month = parseInt(dateMatch2[2]) - 1;
+                    const day = parseInt(dateMatch2[3]);
+                    date = new Date(year, month, day);
+                    return date;
+                }
+                
+                // 默认是今天
+                return today;
+            }
+            
+            // 确定分类
+            determineCategory(message, type) {
+                // 如果是收入，直接返回收入分类
+                if (type === 'income') {
+                    return 'income';
+                }
+                
+                // 计算每个分类的匹配分数
+                const scores = {};
+                
+                for (const [categoryId, categoryData] of Object.entries(this.categoryWeights)) {
+                    scores[categoryId] = 0;
+                    
+                    for (const keyword of categoryData.keywords) {
+                        if (message.includes(keyword)) {
+                            scores[categoryId] += categoryData.weight;
+                        }
+                    }
+                }
+                
+                // 找出分数最高的分类
+                let maxScore = 0;
+                let bestCategory = 'other';
+                
+                for (const [categoryId, score] of Object.entries(scores)) {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestCategory = categoryId;
+                    }
+                }
+                
+                return bestCategory;
+            }
+            
+            // 提取描述
+            extractDescription(message, amount, type, category, date) {
+                // 移除金额相关内容
+                let desc = message.replace(/(\d+\.?\d*)\s*([元块]|块钱|人民币|￥|$)/g, '');
+                desc = desc.replace(/([$￥])\s*(\d+\.?\d*)/g, '');
+                
+                // 移除日期相关内容
+                const dateKeywords = [
+                    ...this.keywords.date.today,
+                    ...this.keywords.date.yesterday,
+                    ...this.keywords.date.daysAgo,
+                    ...this.keywords.date.tomorrow,
+                    ...this.keywords.date.week,
+                    ...this.keywords.date.month
+                ];
+                
+                for (const keyword of dateKeywords) {
+                    desc = desc.replace(new RegExp(keyword, 'g'), '');
+                }
+                
+                // 移除分类关键词
+                if (category !== 'other' && this.categoryWeights[category]) {
+                    for (const keyword of this.categoryWeights[category].keywords) {
+                        desc = desc.replace(new RegExp(keyword, 'g'), '');
+                    }
+                }
+                
+                // 移除收支类型关键词
+                const typeKeywords = type === 'income' ? this.keywords.income : this.keywords.expense;
+                for (const keyword of typeKeywords) {
+                    desc = desc.replace(new RegExp(keyword, 'g'), '');
+                }
+                
+                // 清理多余空格并截取前50个字符
+                desc = desc.replace(/\s+/g, ' ').trim().substring(0, 50);
+                
+                // 如果描述为空，根据分类生成默认描述
+                if (!desc) {
+                    const categoryName = AppState.categories.find(c => c.id === category)?.name || '其他';
+                    desc = type === 'income' ? `${categoryName}收入` : `${categoryName}支出`;
+                }
+                
+                return desc;
+            }
+            
+            // 解析消息
+            parse(message) {
+                // 提取金额
+                const amount = this.extractAmount(message);
+                if (amount === null || isNaN(amount) || amount <= 0) {
+                    return null;
+                }
+                
+                // 确定类型（收入或支出）
+                const type = this.determineType(message);
+                
+                // 确定日期
+                const date = this.determineDate(message);
+                
+                // 确定分类
+                const category = this.determineCategory(message, type);
+                
+                // 提取描述
+                const description = this.extractDescription(message, amount, type, category, date);
+                
+                return {
+                    amount,
+                    type,
+                    date,
+                    category,
+                    description
+                };
+            }
+        }
         
-        // 确定分类
-        const category = this.determineCategory(message, type);
-        console.log(`判定分类: ${category}`);
+        // 创建AI解析器实例
+        const aiParser = new AIParser();
         
-        // 生成备注
-        const note = this.generateNote(message, type, originalAmount, category);
-        console.log(`生成备注: ${note}`);
-        
-        // 返回解析结果
-        const result = {
-            "type": type,
-            "actual_amount": originalAmount,
-            "original_amount": originalAmount,
-            "category": category,
-            "note": note
-        };
-        
-        console.log('最终结果:', JSON.stringify(result, null, 2));
-        return result;
-    }
-}
+        // 解析消息
+        function parseMessage(message) {
+            return aiParser.parse(message);
+        }
 
-// 创建测试实例
-const parser = new TestExpenseParser();
+        // 创建记录
+        function createRecord(data) {
+            return {
+                id: generateId(),
+                amount: data.amount,
+                type: data.type,
+                date: data.date,
+                category: data.category,
+                description: data.description,
+                createdAt: new Date()
+            };
+        }
 
-// 测试用例
-const testCases = [
-    "同事转我80，是昨天打车的AA钱",
-    "同事转我60，是昨天打车AA的钱",
-    "妈妈给了我100",
-    "吃饭花了100，但是两个人aa",
-    "我转给同事200",
-    "报销了打车费50",
-    "买衣服花了300",
-    "工资到账5000",
-    "退了一张机票，退了800"
-];
+        // 保存单条记录
+        function saveRecord(record) {
+            AppState.records.push(record);
+            localStorage.setItem('expenseRecords', JSON.stringify(AppState.records));
+        }
 
-// 运行测试
-console.log('开始测试对话式记账语义解析功能...\n');
+        // 保存所有记录
+        function saveRecords() {
+            localStorage.setItem('expenseRecords', JSON.stringify(AppState.records));
+        }
 
-testCases.forEach((testCase, index) => {
-    console.log(`测试用例 ${index + 1}:`);
-    parser.parse(testCase);
-    console.log('=' .repeat(50));
-});
+        // 加载记录
+        function loadRecords() {
+            const savedRecords = localStorage.getItem('expenseRecords');
+            if (savedRecords) {
+                AppState.records = JSON.parse(savedRecords);
+                
+                // 确保日期是Date对象
+                AppState.records.forEach(record => {
+                    record.date = new Date(record.date);
+                    record.createdAt = new Date(record.createdAt);
+                });
+            }
+        }
 
-console.log('\n测试完成！');
+        // 渲染日视图
+        function renderDailyView() {
+            const date = AppState.currentDate;
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            // 过滤当天的记录
+            const dayRecords = AppState.records.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate >= startOfDay && recordDate <= endOfDay;
+            });
+            
+            // 计算收支
+            const expense = dayRecords
+                .filter(record => record.type === 'expense')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const income = dayRecords
+                .filter(record => record.type === 'income')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const balance = income - expense;
+            
+            // 更新显示
+            document.querySelector('#view-daily .text-red-500').textContent = `¥${expense.toFixed(2)}`;
+            document.querySelector('#view-daily .text-green-500').textContent = `¥${income.toFixed(2)}`;
+            document.querySelector('#view-daily .text-blue-500').textContent = `¥${balance.toFixed(2)}`;
+            
+            // 渲染记录列表
+            renderRecordsList(elements.dailyRecords, dayRecords);
+        }
+
+        // 渲染周视图
+        function renderWeeklyView() {
+            const { year, week } = AppState.currentWeek;
+            
+            // 获取周的开始和结束日期
+            const { start, end } = getWeekDates(year, week);
+            
+            // 过滤本周的记录
+            const weekRecords = AppState.records.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate >= start && recordDate <= end;
+            });
+            
+            // 计算收支
+            const expense = weekRecords
+                .filter(record => record.type === 'expense')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const income = weekRecords
+                .filter(record => record.type === 'income')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const balance = income - expense;
+            
+            // 更新显示
+            document.querySelector('#view-weekly .text-red-500').textContent = `¥${expense.toFixed(2)}`;
+            document.querySelector('#view-weekly .text-green-500').textContent = `¥${income.toFixed(2)}`;
+            document.querySelector('#view-weekly .text-blue-500').textContent = `¥${balance.toFixed(2)}`;
+            
+            // 渲染记录列表
+            renderRecordsList(elements.weeklyRecords, weekRecords);
+            
+            // 渲染图表
+            renderWeeklyChart(weekRecords);
+        }
+
+        // 渲染月视图
+        function renderMonthlyView() {
+            const year = AppState.currentYear;
+            const month = AppState.currentMonth;
+            
+            // 获取月的开始和结束日期
+            const start = new Date(year, month, 1);
+            const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+            
+            // 过滤本月的记录
+            const monthRecords = AppState.records.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate >= start && recordDate <= end;
+            });
+            
+            // 计算收支
+            const expense = monthRecords
+                .filter(record => record.type === 'expense')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const income = monthRecords
+                .filter(record => record.type === 'income')
+                .reduce((sum, record) => sum + record.amount, 0);
+                
+            const balance = income - expense;
+            
+            // 更新显示
+            document.querySelector('#view-monthly .text-red-500').textContent = `¥${expense.toFixed(2)}`;
+            document.querySelector('#view-monthly .text-green-500').textContent = `¥${income.toFixed(2)}`;
+            document.querySelector('#view-monthly .text-blue-500').textContent = `¥${balance.toFixed(2)}`;
+            
+            // 渲染记录列表
+            renderRecordsList(elements.monthlyRecords, monthRecords);
+            
+            // 渲染图表
+            renderMonthlyChart(monthRecords);
+        }
+
+        // 渲染记录列表
+        function renderRecordsList(container, records) {
+            // 清空容器
+            container.innerHTML = '';
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fa fa-clipboard-list text-4xl mb-2"></i>
+                        <p>暂无记账记录</p>
+                        <p class="text-sm mt-2">点击上方"对话记账"开始记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按日期排序（最新的在前）
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // 分组记录
+            const groupedRecords = {};
+            
+            records.forEach(record => {
+                const date = formatDate(record.date);
+                if (!groupedRecords[date]) {
+                    groupedRecords[date] = [];
+                }
+                groupedRecords[date].push(record);
+            });
+            
+            // 创建记录项
+            for (const date in groupedRecords) {
+                const dateRecords = groupedRecords[date];
+                
+                // 日期标题
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'text-sm font-medium text-gray-500 mt-4 mb-2';
+                dateHeader.textContent = date;
+                container.appendChild(dateHeader);
+                
+                // 记录列表
+                dateRecords.forEach(record => {
+                    const category = AppState.categories.find(c => c.id === record.category) || AppState.categories[AppState.categories.length - 1];
+                    
+                    const recordItem = document.createElement('div');
+                    recordItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    
+                    recordItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-${category.color}-100 flex items-center justify-center text-${category.color}-500 mr-3">
+                                <i class="fa fa-${category.icon}"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-800 font-medium">${category.name}</p>
+                                <p class="text-sm text-gray-500 truncate max-w-xs">${record.description}</p>
+                            </div>
+                        </div>
+                        <span class="font-medium ${record.type === 'expense' ? 'text-red-500' : 'text-green-500'}">
+                            ${record.type === 'expense' ? '-' : '+'}${record.amount.toFixed(2)}元
+                        </span>
+                    `;
+                    
+                    container.appendChild(recordItem);
+                });
+            }
+        }
+
+        // 渲染周图表
+        function renderWeeklyChart(records) {
+            const ctx = document.getElementById('weekly-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (AppState.charts.weekly) {
+                AppState.charts.weekly.destroy();
+            }
+            
+            // 过滤支出记录
+            const expenseRecords = records.filter(record => record.type === 'expense');
+            
+            // 按分类分组
+            const categoryData = {};
+            
+            expenseRecords.forEach(record => {
+                if (!categoryData[record.category]) {
+                    categoryData[record.category] = 0;
+                }
+                categoryData[record.category] += record.amount;
+            });
+            
+            // 准备图表数据
+            const labels = [];
+            const data = [];
+            const backgroundColor = [];
+            
+            for (const categoryId in categoryData) {
+                const category = AppState.categories.find(c => c.id === categoryId) || AppState.categories[AppState.categories.length - 1];
+                labels.push(category.name);
+                data.push(categoryData[categoryId]);
+                backgroundColor.push(`rgb(var(--tw-color-${category.color}-500))`);
+            }
+            
+            // 创建图表
+            AppState.charts.weekly = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 渲染月图表
+        function renderMonthlyChart(records) {
+            const ctx = document.getElementById('monthly-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (AppState.charts.monthly) {
+                AppState.charts.monthly.destroy();
+            }
+            
+            // 过滤支出记录
+            const expenseRecords = records.filter(record => record.type === 'expense');
+            
+            // 按分类分组
+            const categoryData = {};
+            
+            expenseRecords.forEach(record => {
+                if (!categoryData[record.category]) {
+                    categoryData[record.category] = 0;
+                }
+                categoryData[record.category] += record.amount;
+            });
+            
+            // 准备图表数据
+            const labels = [];
+            const data = [];
+            const backgroundColor = [];
+            
+            for (const categoryId in categoryData) {
+                const category = AppState.categories.find(c => c.id === categoryId) || AppState.categories[AppState.categories.length - 1];
+                labels.push(category.name);
+                data.push(categoryData[categoryId]);
+                backgroundColor.push(`rgb(var(--tw-color-${category.color}-500))`);
+            }
+            
+            // 创建图表
+            AppState.charts.monthly = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示统计视图
+        function showStats() {
+            elements.viewStats.classList.remove('hidden');
+            
+            // 渲染统计图表
+            renderExpenseChart();
+            renderTrendChart();
+            renderTopCategories();
+        }
+
+        // 隐藏统计视图
+        function hideStats() {
+            elements.viewStats.classList.add('hidden');
+        }
+
+        // 渲染支出分类图表
+        function renderExpenseChart() {
+            const ctx = document.getElementById('expense-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (AppState.charts.expense) {
+                AppState.charts.expense.destroy();
+            }
+            
+            // 过滤最近3个月的支出记录
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            const recentRecords = AppState.records.filter(record => {
+                return record.type === 'expense' && new Date(record.date) >= threeMonthsAgo;
+            });
+            
+            // 按分类分组
+            const categoryData = {};
+            
+            recentRecords.forEach(record => {
+                if (!categoryData[record.category]) {
+                    categoryData[record.category] = 0;
+                }
+                categoryData[record.category] += record.amount;
+            });
+            
+            // 准备图表数据
+            const labels = [];
+            const data = [];
+            const backgroundColor = [];
+            
+            for (const categoryId in categoryData) {
+                const category = AppState.categories.find(c => c.id === categoryId) || AppState.categories[AppState.categories.length - 1];
+                labels.push(category.name);
+                data.push(categoryData[categoryId]);
+                backgroundColor.push(`rgb(var(--tw-color-${category.color}-500))`);
+            }
+            
+            // 创建图表
+            AppState.charts.expense = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 渲染趋势图表
+        function renderTrendChart() {
+            const ctx = document.getElementById('trend-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (AppState.charts.trend) {
+                AppState.charts.trend.destroy();
+            }
+            
+            // 获取最近6个月的数据
+            const months = [];
+            const expenseData = [];
+            const incomeData = [];
+            
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                
+                const month = date.getMonth();
+                const year = date.getFullYear();
+                
+                const monthLabel = `${year}年${month + 1}月`;
+                months.push(monthLabel);
+                
+                // 计算该月的开始和结束日期
+                const start = new Date(year, month, 1);
+                const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+                
+                // 过滤该月的记录
+                const monthRecords = AppState.records.filter(record => {
+                    const recordDate = new Date(record.date);
+                    return recordDate >= start && recordDate <= end;
+                });
+                
+                // 计算支出和收入
+                const expense = monthRecords
+                    .filter(record => record.type === 'expense')
+                    .reduce((sum, record) => sum + record.amount, 0);
+                    
+                const income = monthRecords
+                    .filter(record => record.type === 'income')
+                    .reduce((sum, record) => sum + record.amount, 0);
+                
+                expenseData.push(expense);
+                incomeData.push(income);
+            }
+            
+            // 创建图表
+            AppState.charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: '支出',
+                            data: expenseData,
+                            borderColor: 'rgb(var(--tw-color-red-500))',
+                            backgroundColor: 'rgba(var(--tw-color-red-500), 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '收入',
+                            data: incomeData,
+                            borderColor: 'rgb(var(--tw-color-green-500))',
+                            backgroundColor: 'rgba(var(--tw-color-green-500), 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 渲染支出最多的分类
+        function renderTopCategories() {
+            const container = document.getElementById('top-categories');
+            container.innerHTML = '';
+            
+            // 过滤最近3个月的支出记录
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            const recentRecords = AppState.records.filter(record => {
+                return record.type === 'expense' && new Date(record.date) >= threeMonthsAgo;
+            });
+            
+            // 按分类分组
+            const categoryData = {};
+            
+            recentRecords.forEach(record => {
+                if (!categoryData[record.category]) {
+                    categoryData[record.category] = 0;
+                }
+                categoryData[record.category] += record.amount;
+            });
+            
+            // 排序
+            const sortedCategories = Object.entries(categoryData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6);
+            
+            if (sortedCategories.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <p>暂无足够的记账数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 创建分类卡片
+            sortedCategories.forEach(([categoryId, amount]) => {
+                const category = AppState.categories.find(c => c.id === categoryId) || AppState.categories[AppState.categories.length - 1];
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow p-4 border border-gray-100';
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-${category.color}-100 flex items-center justify-center text-${category.color}-500 mr-3">
+                                <i class="fa fa-${category.icon}"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">${category.name}</h4>
+                        </div>
+                        <span class="text-lg font-bold text-gray-800">¥${amount.toFixed(2)}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-${category.color}-500 h-2 rounded-full" style="width: ${(amount / sortedCategories[0][1]) * 100}%"></div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // 切换语音输入
+        function toggleVoiceInput() {
+            const btn = elements.btnVoice;
+            
+            if (btn.classList.contains('recording')) {
+                // 停止录音
+                btn.classList.remove('recording', 'bg-red-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-600');
+                btn.innerHTML = '<i class="fa fa-microphone"></i>';
+                
+                // 模拟语音识别结果
+                setTimeout(() => {
+                    elements.chatInput.value = '今天打车花了30元';
+                    sendMessage();
+                }, 500);
+            } else {
+                // 开始录音
+                btn.classList.add('recording', 'bg-red-500', 'text-white');
+                btn.classList.remove('bg-gray-200', 'text-gray-600');
+                btn.innerHTML = '<i class="fa fa-stop"></i>';
+                
+                // 模拟3秒后自动停止
+                setTimeout(() => {
+                    if (btn.classList.contains('recording')) {
+                        toggleVoiceInput();
+                    }
+                }, 3000);
+            }
+        }
+
+        // 显示输入建议
+        function showSuggestions() {
+            elements.suggestions.classList.remove('hidden');
+        }
+
+        // 导航日期
+        function navigateDate(direction, unit) {
+            switch(unit) {
+                case 'day':
+                    AppState.currentDate.setDate(AppState.currentDate.getDate() + direction);
+                    break;
+                case 'week':
+                    const { year, week } = AppState.currentWeek;
+                    let newWeek = week + direction;
+                    let newYear = year;
+                    
+                    if (newWeek < 1) {
+                        newWeek = 52; // 假设每年52周
+                        newYear--;
+                    } else if (newWeek > 52) {
+                        newWeek = 1;
+                        newYear++;
+                    }
+                    
+                    AppState.currentWeek = { year: newYear, week: newWeek };
+                    break;
+                case 'month':
+                    let newMonth = AppState.currentMonth + direction;
+                    let newYearMonth = AppState.currentYear;
+                    
+                    if (newMonth < 0) {
+                        newMonth = 11;
+                        newYearMonth--;
+                    } else if (newMonth > 11) {
+                        newMonth = 0;
+                        newYearMonth++;
+                    }
+                    
+                    AppState.currentMonth = newMonth;
+                    AppState.currentYear = newYearMonth;
+                    break;
+            }
+            
+            // 更新日期显示
+            updateDateDisplay();
+            
+            // 重新渲染当前视图
+            renderView(AppState.currentView);
+        }
+
+        // 更新日期显示
+        function updateDateDisplay() {
+            // 更新日视图日期
+            elements.currentDay.textContent = formatDate(AppState.currentDate, 'full');
+            
+            // 更新周视图日期
+            const { year, week } = AppState.currentWeek;
+            elements.currentWeek.textContent = `${year}年第${week}周`;
+            
+            // 更新月视图日期
+            elements.currentMonth.textContent = `${AppState.currentYear}年${AppState.currentMonth + 1}月`;
+        }
+
+        // 格式化日期
+        function formatDate(date, format = 'default') {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const day = d.getDate();
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            d.setHours(0, 0, 0, 0);
+            
+            if (format === 'full') {
+                return `${year}年${month}月${day}日`;
+            }
+            
+            if (d.getTime() === today.getTime()) {
+                return '今天';
+            }
+            
+            today.setDate(today.getDate() - 1);
+            if (d.getTime() === today.getTime()) {
+                return '昨天';
+            }
+            
+            return `${month}月${day}日`;
+        }
+
+        // 获取周数
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+            
+            return { year: d.getUTCFullYear(), week: weekNo };
+        }
+
+        // 获取周的开始和结束日期
+        function getWeekDates(year, week) {
+            const firstDayOfYear = new Date(year, 0, 1);
+            const firstDayOfWeek = new Date(firstDayOfYear);
+            
+            // 调整到第一周的星期一
+            const dayOfWeek = firstDayOfYear.getDay() || 7;
+            firstDayOfWeek.setDate(firstDayOfYear.getDate() + (8 - dayOfWeek));
+            
+            // 计算目标周的开始日期
+            const startOfWeek = new Date(firstDayOfWeek);
+            startOfWeek.setDate(firstDayOfWeek.getDate() + (week - 1) * 7);
+            
+            // 计算目标周的结束日期
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+            
+            return { start: startOfWeek, end: endOfWeek };
+        }
+
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

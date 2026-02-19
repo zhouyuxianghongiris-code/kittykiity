@@ -1,0 +1,389 @@
+// 测试脚本：验证对话式记账语义解析功能
+
+// 模拟ExpenseParser类的核心逻辑
+class TestExpenseParser {
+    constructor() {
+        // 收支类型关键词
+        this.typeKeywords = {
+            income: [
+                '收入', '工资', '薪水', '薪资', '奖金', '红包', '转账', '兼职', '赚', '到账', 
+                '入账', '进账', '回款', '稿费', '劳务费', '补贴', '报销', '退款', '给了我', 
+                '给我', '发给我', '汇给我', '转给我', '打给我', '赞助', '资助', '奖励', '礼金',
+                'AA返还', 'AA钱', '返还', '还给我', '退回', '退给我', '报销款', '报销费用',
+                '转我', '汇我', '打我', '发我', '给我钱', '转钱给我', '汇钱给我', '打钱给我'
+            ],
+            expense: [
+                '花', '消费', '支出', '买', '购', '支付', '付', '花费', '开销', '费用', 
+                '成本', '价格', '价值', '需要', '用了', '用掉', '花掉', '花了', '消费了', 
+                '支出了', '支付了', '付了', '花了', '买了', '买东西', '开销', '花费', '支出',
+                '转给', '汇给', '打给', '发给', '转钱给', '汇钱给', '打钱给', '发钱给', '支付给',
+                '付给', '转给别人', '汇给别人', '打给别人', '发给别人'
+            ]
+        };
+        
+        // 分类关键词
+        this.categoryKeywords = {
+            '餐饮': ['饭', '餐', '食', '饮', '咖啡', '奶茶', '外卖', '餐厅', '饭店', '食堂', 
+                   '早餐', '午餐', '晚餐', '夜宵', '吃饭', '用餐', '就餐', '聚餐', '饭局'],
+            '交通': ['车', '打车', '滴滴', '优步', '公交', '地铁', '出租', '地铁卡', '公交卡', 
+                   '加油', '汽油', '柴油', '停车', '停车费', '过路费', '高速费', '高铁', '火车', 
+                   '飞机', '机票', '火车票', '高铁票', '船票', '轮渡', '打车费', '交通费'],
+            '购物': ['买', '购', '衣服', '鞋', '包', '化妆品', '护肤品', '电子产品', '手机', 
+                   '电脑', '平板', '耳机', '手表', '首饰', '项链', '戒指', '耳环', '眼镜', 
+                   '帽子', '围巾', '手套', '裤子', '裙子', '上衣', '外套', '内衣', '袜子'],
+            '娱乐': ['电影', '游戏', '玩', '乐', '旅游', '度假', '景点', '门票', '游乐园', 
+                   '演唱会', '音乐会', '话剧', '歌剧', '舞剧', '相声', '小品', '魔术', '杂技', 
+                   '马戏团', 'KTV', '酒吧', '夜店', '桌游', '密室逃脱', '剧本杀'],
+            '医疗': ['药', '医', '病', '医院', '诊所', '检查', '治疗', '手术', '药品', 
+                   '处方药', '非处方药', '中药', '西药', '草药', '针剂', '输液', '打针', '疫苗', 
+                   '体检', '验血', '验尿', 'CT', '核磁共振', 'B超', 'X光'],
+            '水电': ['电', '水', '燃气', '网', '话费', '宽带', '物业', '电费', '水费', 
+                   '燃气费', '网费', '电话费', '手机费', '物业费', '供暖费', '取暖费'],
+            '住房': ['房', '租', '贷', '公寓', '宿舍', '装修', '房租', '房贷', '房租费', 
+                   '房贷月供', '装修费', '家具', '家电', '沙发', '床', '桌子', '椅子'],
+            '教育': ['学', '书', '课程', '培训', '学费', '辅导', '考试', '学校', '大学', 
+                   '中学', '小学', '幼儿园', '托儿所', '辅导班', '培训班', '补习班'],
+            '亲属赠予': ['妈妈', '爸爸', '妈', '爸', '母亲', '父亲', '奶奶', '爷爷', '姥姥', 
+                      '姥爷', '叔叔', '阿姨', '姑姑', '舅舅', '姨妈', '舅妈', '姑妈', '伯母', 
+                      '婶婶', '姨父', '姑父', '舅舅', '侄子', '侄女', '外甥', '外甥女', '表哥', 
+                      '表姐', '表弟', '表妹', '家人', '亲戚', '亲属'],
+            '其他': []
+        };
+    }
+    
+    // 提取金额
+    extractAmount(message) {
+        const amountPatterns = [
+            /(\d+\.?\d*)\s*([元块]|块钱|人民币|￥)/g,
+            /([$￥])\s*(\d+\.?\d*)/g,
+            /(\d+\.?\d*)\s*([$￥])/g,
+            /(\d+\.?\d*)\s*(美元|美金|欧元|英镑)/g
+        ];
+        
+        let amount = null;
+        
+        for (const pattern of amountPatterns) {
+            const match = pattern.exec(message);
+            if (match) {
+                if (match[1] === '$' || match[1] === '￥') {
+                    amount = parseFloat(match[2]);
+                } else if (match[2] === '$' || match[2] === '￥') {
+                    amount = parseFloat(match[1]);
+                } else {
+                    amount = parseFloat(match[1]);
+                }
+                break;
+            }
+        }
+        
+        // 如果没有找到带单位的金额，尝试找纯数字
+        if (amount === null) {
+            const numMatch = message.match(/(\d+\.?\d*)/);
+            if (numMatch) {
+                amount = parseFloat(numMatch[1]);
+            }
+        }
+        
+        return amount;
+    }
+    
+    // 确定收支类型
+    determineType(message) {
+        // 优先检查AA返还场景
+        if (message.includes('AA') && (message.includes('返还') || message.includes('还') || 
+            message.includes('退') || message.includes('转我') || message.includes('给我'))) {
+            return '收入';
+        }
+        
+        // 检查报销场景
+        if (message.includes('报销')) {
+            return '收入';
+        }
+        
+        // 检查退款场景
+        if (message.includes('退款') || message.includes('退钱') || message.includes('退回')) {
+            return '收入';
+        }
+        
+        // 检查是否包含收入关键词
+        for (const keyword of this.typeKeywords.income) {
+            if (message.includes(keyword)) {
+                return '收入';
+            }
+        }
+        
+        // 检查是否包含支出关键词
+        for (const keyword of this.typeKeywords.expense) {
+            if (message.includes(keyword)) {
+                return '支出';
+            }
+        }
+        
+        // 检查是否有隐含的收支类型
+        // 他人转给我的钱 = 收入
+        if (message.includes('给了我') || message.includes('给我') || 
+            message.includes('发给我') || message.includes('汇给我') || 
+            message.includes('转给我') || message.includes('打给我') ||
+            message.includes('转我') || message.includes('汇我') ||
+            message.includes('打我') || message.includes('发我')) {
+            return '收入';
+        }
+        
+        // 我转给他人的钱 = 支出
+        if (message.includes('转给') || message.includes('汇给') || 
+            message.includes('打给') || message.includes('发给') ||
+            message.includes('转钱给') || message.includes('汇钱给') ||
+            message.includes('打钱给') || message.includes('发钱给')) {
+            // 排除转给我的情况
+            if (!message.includes('转给我') && !message.includes('汇给我') && 
+                !message.includes('打给我') && !message.includes('发给我') &&
+                !message.includes('转我') && !message.includes('汇我') &&
+                !message.includes('打我') && !message.includes('发我')) {
+                return '支出';
+            }
+        }
+        
+        // 默认是支出
+        return '支出';
+    }
+    
+    // 确定分类
+    determineCategory(message, type) {
+        // 特殊场景优先处理
+        
+        // AA返还场景的分类
+        if (type === '收入' && message.includes('AA')) {
+            if (message.includes('打车')) {
+                return '交通';
+            } else if (message.includes('吃饭') || message.includes('餐')) {
+                return '餐饮';
+            } else if (message.includes('购物') || message.includes('买')) {
+                return '购物';
+            } else if (message.includes('电影') || message.includes('娱乐')) {
+                return '娱乐';
+            }
+        }
+        
+        // 报销场景的分类
+        if (type === '收入' && message.includes('报销')) {
+            if (message.includes('交通') || message.includes('打车')) {
+                return '交通';
+            } else if (message.includes('餐饮') || message.includes('饭')) {
+                return '餐饮';
+            } else if (message.includes('差旅') || message.includes('出差')) {
+                return '交通';
+            }
+        }
+        
+        // 退款场景的分类
+        if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
+            if (message.includes('购物') || message.includes('买')) {
+                return '购物';
+            } else if (message.includes('机票') || message.includes('车票') || message.includes('交通')) {
+                return '交通';
+            } else if (message.includes('酒店') || message.includes('住宿')) {
+                return '住房';
+            }
+        }
+        
+        // 如果是收入，先检查是否是亲属赠予
+        if (type === '收入') {
+            for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+                if (category === '亲属赠予') {
+                    for (const keyword of keywords) {
+                        if (message.includes(keyword)) {
+                            return category;
+                        }
+                    }
+                }
+            }
+            
+            // 检查其他收入分类
+            if (message.includes('工资') || message.includes('薪水') || message.includes('薪资')) {
+                return '工资收入';
+            } else if (message.includes('奖金') || message.includes('奖励')) {
+                return '奖金';
+            } else if (message.includes('红包')) {
+                return '红包';
+            } else if (message.includes('报销')) {
+                return '报销';
+            } else if (message.includes('退款')) {
+                return '退款';
+            } else if (message.includes('兼职') || message.includes('劳务费') || message.includes('稿费')) {
+                return '兼职收入';
+            } else {
+                return '其他收入';
+            }
+        }
+        
+        // 如果是支出，检查各类支出分类
+        for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+            if (category === '其他' || category === '亲属赠予') continue;
+            
+            for (const keyword of keywords) {
+                if (message.includes(keyword)) {
+                    return category;
+                }
+            }
+        }
+        
+        // 默认分类
+        return '其他';
+    }
+    
+    // 生成备注
+    generateNote(message, type, originalAmount, category) {
+        let note = '';
+        
+        // 处理AA返还场景
+        if (type === '收入' && message.includes('AA')) {
+            if (message.includes('打车')) {
+                note = '同事返还打车AA费用';
+            } else if (message.includes('吃饭') || message.includes('餐')) {
+                note = '同事返还餐饮AA费用';
+            } else if (message.includes('购物') || message.includes('买')) {
+                note = '同事返还购物AA费用';
+            } else {
+                note = '同事返还AA费用';
+            }
+            return note;
+        }
+        
+        // 处理报销场景
+        if (type === '收入' && message.includes('报销')) {
+            if (message.includes('交通') || message.includes('打车')) {
+                note = '交通费用报销';
+            } else if (message.includes('餐饮') || message.includes('饭')) {
+                note = '餐饮费用报销';
+            } else {
+                note = '费用报销';
+            }
+            return note;
+        }
+        
+        // 处理退款场景
+        if (type === '收入' && (message.includes('退款') || message.includes('退钱'))) {
+            if (message.includes('购物') || message.includes('买')) {
+                note = '购物退款';
+            } else if (message.includes('机票') || message.includes('车票')) {
+                note = '票务退款';
+            } else {
+                note = '退款';
+            }
+            return note;
+        }
+        
+        // 基础备注
+        if (type === '支出') {
+            note = `${category}支出`;
+        } else {
+            note = `${category}`;
+        }
+        
+        // 添加具体场景描述
+        if (type === '收入') {
+            if (category === '亲属赠予') {
+                // 提取亲属关系
+                for (const keyword of this.categoryKeywords['亲属赠予']) {
+                    if (message.includes(keyword)) {
+                        note = `${keyword}给的钱`;
+                        break;
+                    }
+                }
+            } else if (message.includes('工资') || message.includes('薪水')) {
+                note = '工资收入';
+            } else if (message.includes('奖金')) {
+                note = '奖金收入';
+            } else if (message.includes('红包')) {
+                note = '红包收入';
+            }
+        } else {
+            // 提取支出场景
+            if (message.includes('买') || message.includes('购')) {
+                note = `购买${category}`;
+            } else if (message.includes('吃') || message.includes('餐') || message.includes('饭')) {
+                note = `餐饮消费`;
+            } else if (message.includes('交通') || message.includes('打车') || message.includes('公交') || message.includes('地铁')) {
+                note = `交通出行`;
+            } else if (message.includes('转给') || message.includes('汇给') || message.includes('打给')) {
+                // 提取转账对象
+                if (message.includes('同事')) {
+                    note = `转账给同事`;
+                } else if (message.includes('朋友')) {
+                    note = `转账给朋友`;
+                } else if (message.includes('家人') || message.includes('父母') || message.includes('妈妈') || message.includes('爸爸')) {
+                    note = `转账给家人`;
+                } else {
+                    note = `转账支出`;
+                }
+            }
+        }
+        
+        return note;
+    }
+    
+    // 解析消息
+    parse(message) {
+        console.log(`\n=== 测试输入: "${message}" ===`);
+        
+        // 检查是否有金额
+        const originalAmount = this.extractAmount(message);
+        if (originalAmount === null || isNaN(originalAmount) || originalAmount <= 0) {
+            console.log('结果: {"need_more_info":"请补充关键信息（如金额/收支场景）"}');
+            return { "need_more_info": "请补充关键信息（如金额/收支场景）" };
+        }
+        
+        console.log(`提取金额: ${originalAmount}`);
+        
+        // 确定收支类型
+        const type = this.determineType(message);
+        console.log(`判定类型: ${type}`);
+        
+        // 确定分类
+        const category = this.determineCategory(message, type);
+        console.log(`判定分类: ${category}`);
+        
+        // 生成备注
+        const note = this.generateNote(message, type, originalAmount, category);
+        console.log(`生成备注: ${note}`);
+        
+        // 返回解析结果
+        const result = {
+            "type": type,
+            "actual_amount": originalAmount,
+            "original_amount": originalAmount,
+            "category": category,
+            "note": note
+        };
+        
+        console.log('最终结果:', JSON.stringify(result, null, 2));
+        return result;
+    }
+}
+
+// 创建测试实例
+const parser = new TestExpenseParser();
+
+// 测试用例
+const testCases = [
+    "同事转我80，是昨天打车的AA钱",
+    "同事转我60，是昨天打车AA的钱",
+    "妈妈给了我100",
+    "吃饭花了100，但是两个人aa",
+    "我转给同事200",
+    "报销了打车费50",
+    "买衣服花了300",
+    "工资到账5000",
+    "退了一张机票，退了800"
+];
+
+// 运行测试
+console.log('开始测试对话式记账语义解析功能...\n');
+
+testCases.forEach((testCase, index) => {
+    console.log(`测试用例 ${index + 1}:`);
+    parser.parse(testCase);
+    console.log('=' .repeat(50));
+});
+
+console.log('\n测试完成！');
